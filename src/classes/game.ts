@@ -1,4 +1,6 @@
 import * as PIXI from 'pixi.js';
+import { Viewport } from 'pixi-viewport';
+
 import {Player} from './player';
 import {Input} from './input';
 import { MapLoader } from './map-loader';
@@ -6,6 +8,8 @@ import { MapLoader } from './map-loader';
 export class Game {
 
     private app: PIXI.Application = null!;
+    private viewport: Viewport = null!;
+
     private input: Input = null!;
     private player: Player = null!;
 
@@ -27,10 +31,22 @@ export class Game {
             resolution: window.devicePixelRatio || 1
         });
 
-        app.stage.addChild(new PIXI.Container());
-        app.stage.scale.set(this.scale);
-
         this.app = app;
+
+        // Viewport
+        const viewport = new Viewport({
+            screenWidth: this.width,
+            screenHeight:  this.height,
+            worldWidth: this.width,
+            worldHeight: this.height,
+            ticker: app.ticker,
+            interaction: app.renderer.plugins.interaction
+        });
+
+        this.viewport = viewport;
+        
+        app.stage.addChild(viewport);
+        viewport.scale.set(this.scale);
 
         // Input
         const input = new Input();
@@ -72,7 +88,10 @@ export class Game {
                         const p = new Player(frameNames);
                         this.player = p;
             
-                        this.app.stage.addChild(p.getSprite());
+                        const sprite = p.getSprite();
+
+                        this.viewport.addChild(sprite);
+                        //this.viewport.follow(sprite);
                     }
 
                     // Zombies
@@ -87,7 +106,7 @@ export class Game {
                             const z = new Player(frameNames);
                             z.setPosition(x, y);
                             z.setZombie(true);
-                            this.app.stage.addChild(z.getSprite());
+                            this.viewport.addChild(z.getSprite());
 
                             this.zombies.push(z);
                         }
@@ -101,7 +120,7 @@ export class Game {
                         const mapLoader = new MapLoader(tileData, tileTextures, mapData);
                         const sprites = mapLoader.getMapSprites();
                         if (sprites) {
-                            sprites.forEach(s => this.app.stage.addChild(s));
+                            sprites.forEach(s => this.viewport.addChild(s));
                         }
                     }
                 });
@@ -142,11 +161,15 @@ export class Game {
                 zombie.followPosition(pos[0], pos[1]);
                 zombie.update(delta);
             }
-            
         }
 
         this.updateZSorting();
         this.checkCollisions();
+
+        if (this.viewport && this.player) {
+            const pos = this.player.getPosition();
+            this.viewport.moveCenter(pos[0], pos[1]);
+        }
     }
 
     private updateZSorting(): void {
@@ -157,7 +180,7 @@ export class Game {
 
         // Really bad sorting - will fix this
 
-        this.app.stage.children.sort((a, b) => {
+        this.viewport.children.sort((a, b) => {
 
             if (a.name && b.name && a.name === b.name && a.name === 'player') {
                 if(a.y < b.y) {
@@ -194,16 +217,20 @@ export class Game {
     }
     
     private checkCollisions(): void {
+        this.checkPlayerZombieCollisions();
+    }
+
+    private checkPlayerZombieCollisions(): void {
         // Check if player and zombies collide
         if (this.player && this.zombies && this.zombies.length > 0) {
             const player = this.player;
             const playerBounds = player.getBounds();
-    
+
             const zombies = this.zombies;
-    
+
             for (const zombie of zombies) {
                 const zombBound = zombie.getBounds();
-    
+
                 const interesct = this.doIntersect(playerBounds, zombBound);
 
                 if (interesct) {
@@ -211,37 +238,6 @@ export class Game {
                 }
                 
             }
-
-            // Restrict player to screen
-            const playerPos = player.getPosition();
-            const originalPos = [playerPos[0], playerPos[1]];
-
-            const xBuffer = playerBounds.width;
-            const yBuffer = playerBounds.height;
-
-            const minX = xBuffer * 0.5 / this.scale;
-            const maxX = (this.width - xBuffer * 0.5) / this.scale;
-
-            const minY = yBuffer * 0.5 / this.scale;
-            const maxY = (this.height - yBuffer * 0.5) / this.scale;
-
-            if (playerPos[0] < minX) {
-                playerPos[0] = minX;
-            } else if (playerPos[0] > maxX) {
-                playerPos[0] = maxX;
-            }
-
-            if (playerPos[1] < minY) {
-                playerPos[1] = minY;
-            } 
-            else if (playerPos[1] > maxY) {
-                playerPos[1] = maxY;
-            }
-
-            if (originalPos[0] !== playerPos[0] || originalPos[1] !== playerPos[1]) {
-                player.setPosition(playerPos[0], playerPos[1]);
-            }
-            
         }
     }
     

@@ -30,6 +30,7 @@ export class MapLoader {
     }
 
     private loadMapData(mapData: any): void {
+        console.log('got map data', mapData);
         if (mapData.layers) {
             mapData.layers.forEach((l: any, i: number) => {
                 // TO DO - Order the layers correctly
@@ -49,7 +50,7 @@ export class MapLoader {
 
                                 const sprite = new PIXI.Sprite(texture);
                                 sprite.name = 'map';
-                                sprite.x = (c.x + x + 16) * c.width;
+                                sprite.x = (c.x + x) * c.width;
                                 sprite.y = (c.y + y) * c.height;
                                 sprite.anchor.set(0.5);
 

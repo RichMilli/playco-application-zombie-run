@@ -28,7 +28,6 @@ export class PixiContainer extends React.Component<PixiContainerProperties, Pixi
     private createPixiGameApp(): {game: Game, app: PIXI.Application} {
         const game = new Game();
         const app = game.getApp();
-        
         game.start();
       
         return {

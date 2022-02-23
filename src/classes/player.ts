@@ -10,7 +10,6 @@ interface PlayerStateTextures {
 export class Player {
     private prevDirection: [number, number] = [0, 0];
 
-    private readonly anchor: number = 0.5;
     private readonly animationSpeed: number = 0.1;
     private readonly speed: number = 1;
     private readonly zombieSpeed: number = 0.5;
@@ -64,7 +63,7 @@ export class Player {
         sprite.x = 0;
         sprite.y = 0;
         sprite.name = 'player';
-        sprite.anchor.set(this.anchor);
+        sprite.anchor.set(0.5);
         sprite.animationSpeed = this.animationSpeed;
         sprite.gotoAndStop(1);
 
