@@ -63,6 +63,7 @@ export class Player {
         const sprite = new PIXI.AnimatedSprite(this.isZombie ? this.zombieTextures.forward : this.textures.forward);
         sprite.x = 0;
         sprite.y = 0;
+        sprite.name = 'player';
         sprite.anchor.set(this.anchor);
         sprite.animationSpeed = this.animationSpeed;
         sprite.gotoAndStop(1);

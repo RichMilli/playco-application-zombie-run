@@ -1,0 +1,15 @@
+{ "columns":121,
+ "image":"hospital-tiles.png",
+ "imageheight":256,
+ "imagewidth":1936,
+ "margin":0,
+ "name":"hospital-tiles",
+ "spacing":0,
+ "tilecount":1936,
+ "tiledversion":"1.8.2",
+ "tileheight":16,
+ "tilewidth":16,
+ "transparentcolor":"#ff00ff",
+ "type":"tileset",
+ "version":"1.8"
+}
