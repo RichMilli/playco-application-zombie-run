@@ -7,6 +7,9 @@ import { MapLoader } from './map-loader';
 
 import {Bump} from './../external/bump';
 import {js as EasyStar} from 'easystarjs';
+import { Item } from './item';
+import e from 'express';
+import { ItemNames } from '../enums/item-names';
 
 export class Game {
 
@@ -21,10 +24,16 @@ export class Game {
     private player: Player = null!;
 
     private zombies: Player[] = [];
+    private items: Item[] = [];
 
     private readonly width = 800;
     private readonly height = 600;
     private readonly scale = 2;
+
+    private assetsLoaded: boolean = false;
+
+    private playerHealth: number = 100;
+    private playerScore: number = 0;
 
     constructor() {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
@@ -106,6 +115,7 @@ export class Game {
     private setupPlayer(playerFrames: any[]): void {
         const p = new Player(playerFrames);
         this.player = p;
+        p.setIsHit(3);
 
         const sprite = p.getSprite();
 
@@ -126,16 +136,114 @@ export class Game {
         }
     }
 
+    private spawnNewItem(): void {
+        if (this.app && this.app.loader && this.app.loader.resources) {
+
+            const itemType = ItemNames.ITEM_SHINY;
+            const itemPos = this.getRandomWorldPosition();
+            const frames = Object.keys(this.app.loader.resources[itemType].data.frames);
+            const item = new Item(frames, itemPos.x, itemPos.y, itemType);
+
+            // console.log('item', item);
+            this.viewport.addChild(item.getSprite());
+
+            // Remove item when it expires
+            item.onExpire().subscribe(() => {
+                const itemIndex = this.items.findIndex(i => i === item);
+                if (itemIndex > -1) {
+                    this.removeItem(itemIndex, false);
+                }
+            });
+
+            this.items.push(item);
+        }
+    }
+
+    private spawnItems(): void {
+        if (this.assetsLoaded) {
+            const r = Math.round(Math.random() * 100000) / 100000;
+    
+            if (r > 0.10000 && r < 0.10500) {
+                this.spawnNewItem();
+            }
+        }
+    }
+
+    private updateItemLife(delta: number): void {
+        if (this.items && this.items.length) {
+            this.items.forEach(i => i.update(delta));
+        }
+    }
+
+    private removeItem(itemIndex: number, collected?: boolean): void {
+        if (this.items && this.items[itemIndex]) {
+            // Remove item from viewport
+            this.viewport.removeChild(this.items[itemIndex].getSprite());
+            
+
+            // TO DO - Collected action
+            if (collected) {
+                // do here
+                const type = this.items[itemIndex].getItemType();
+
+                switch(type)  {
+                    case ItemNames.ITEM_BRAIN:
+                        // become zombie temporarily
+                        break;
+                    case ItemNames.ITEM_CHIP:
+                        // increase recovery time
+                        break;
+                    case ItemNames.ITEM_HEALTH_PACK:
+                        // increase health
+                        break;
+                    case ItemNames.ITEM_KEY:
+                        // add key (to get through doors)
+                        break;
+                    case ItemNames.ITEM_KEYCARD:
+                        // add keycard (to get through doors)
+                        break;
+                    case ItemNames.ITEM_SPROUT:
+                        // add score (bonus)
+                        this.playerScore += 500;
+                        console.log('player score', this.playerScore);
+                        break;
+                    case ItemNames.ITEM_SHINY:
+                        // add score
+                        this.playerScore += 50;
+                        console.log('player score', this.playerScore);
+                        break;
+                }
+            }
+
+            // Remove item from array
+            this.items.splice(itemIndex, 1);
+        }
+    }
+
     private loadAssets(): void {
         if (this.app) {
             // Load first girl character sprite
             this.app.loader
+
+                // Zombie sprites
                 .add('girl1', '/assets/girl4.json')
                 .add('girl2', '/assets/girl2.json')
+
+                // Items
+                .add(ItemNames.ITEM_BRAIN, '/assets/item-brain.json')
+                .add(ItemNames.ITEM_CHIP, '/assets/item-chip.json')
+                .add(ItemNames.ITEM_HEALTH_PACK, '/assets/item-health-pack.json')
+                .add(ItemNames.ITEM_KEY, '/assets/item-key.json')
+                .add(ItemNames.ITEM_KEYCARD, '/assets/item-keycard.json')
+                .add(ItemNames.ITEM_SPROUT, '/assets/item-sprout.json')
+                .add(ItemNames.ITEM_SHINY, '/assets/item-shiny.json')
+
+                // Map Stuff
                 .add('tiles-data', '/assets/hospital-tiles.json')
                 .add('tiles-image', '/assets/hospital-tiles.png')
                 .add('map-data', '/assets/maptest.json')
                 .load((e: PIXI.Loader, r: {[key: string]: PIXI.LoaderResource} ) => {
+                    this.assetsLoaded = true;
 
                     // Load map
                     if (r && r['tiles-data'] && r['tiles-image'] && r['map-data']) {
@@ -151,7 +259,7 @@ export class Game {
                     // Zombies
                     if (r && r['girl2'] && r['girl2'].data && r['girl2'].data.frames) {
                         this.loadZombies(Object.keys(r['girl2'].data.frames));
-                    }                    
+                    }
                 });
         }
     }
@@ -209,6 +317,10 @@ export class Game {
 
         // Update viewport
         this.updateViewport();
+
+        // Spawn items
+        this.spawnItems();
+        this.updateItemLife(delta);
     }
 
     private updatePlayer(delta: number): void {
@@ -274,10 +386,12 @@ export class Game {
     private updateZSorting(): void {
         // Map and "player" based sorting
 
+        const midLayers = ['player', 'item'];
+
         this.viewport.children.sort((a, b) => {
 
             if (a.name && b.name) {
-                if ((a.name.startsWith('map_') || a.name === 'player') && b.name.startsWith('map_')) {
+                if ((a.name.startsWith('map_') || midLayers.includes(a.name)) && b.name.startsWith('map_')) {
                     if (b.name.includes('Above')) {
                         return -1;
                     } else if (b.name.includes('Middle')) {
@@ -285,7 +399,7 @@ export class Game {
                     } else if (b.name.includes('Below')) {
                         return 1;
                     }
-                } else if (a.name.startsWith('map_') && b.name === 'player') {
+                } else if (a.name.startsWith('map_') && midLayers.includes(b.name)) {
                     if (a.name.includes('Above')) {
                         return 1;
                     } else if (a.name.includes('Middle')) {
@@ -293,7 +407,7 @@ export class Game {
                     } else if (a.name.includes('Below')) {
                         return -1;
                     }
-                } else if (a.name === 'player' && b.name === 'player') {
+                } else if (midLayers.includes(a.name) && midLayers.includes(b.name)) {
                     return this.ySorting(a.y, b.y);
                 }
             }
@@ -305,17 +419,18 @@ export class Game {
     private checkCollisions(): void {
         this.checkPlayerZombieCollisions();
         this.checkPlayerMapCollisions();
+        this.checkPlayerItemCollisions();
     }
 
     private checkPlayerZombieCollisions(): void {
         if (this.player && this.zombies && this.zombies.length > 0) {
             const player = this.player;
-
             const zombies = this.zombies.map(z => z.getSprite());
 
             (this.bump as any).hit(player.getSprite(), zombies, false, false, false, (collision: any, sprite: any) => {
                 // console.log('zombie collision', collision); // gives direction
-            })
+                this.hitPlayer(5);
+            });
         }
     }
 
@@ -330,5 +445,43 @@ export class Game {
                 // console.log('stage collision', collision); // gives direction
             });
         }
-    }    
+    }   
+    
+    private checkPlayerItemCollisions(): void {
+        if (this.player && this.items && this.items.length > 0) {
+            const player = this.player;
+            const p = player.getBounds();
+
+            let found = -1;
+            for (let i = 0; i < this.items.length; i++) {
+                const b = this.items[i].getSprite().getBounds();
+
+                if (p.x + p.width - 16 > b.x &&
+                    p.x < b.x + b.width - 16 &&
+                    p.y + p.height - 32 > b.y &&
+                    p.y < b.y + b.height - 32) {
+                        found = i;
+                        break;
+                    }
+            }
+
+            if (found > -1) {
+                this.removeItem(found, true);
+            }
+        }
+    }
+
+    private hitPlayer(hit: number): void {
+        if (!this.player.getIsHit()) {
+            this.player.setIsHit();
+            
+            this.playerHealth -= hit;
+
+            console.log('player hit', this.playerHealth);
+
+            if (this.playerHealth <= 0) {
+                this.player.setIsDead(true);
+            }
+        }
+    }
 }

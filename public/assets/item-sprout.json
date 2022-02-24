@@ -1,0 +1,42 @@
+{"frames": {
+
+"HC_PowerUps3-48.png":
+{
+	"frame": {"x":37,"y":1,"w":15,"h":24},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":4,"w":15,"h":24},
+	"sourceSize": {"w":16,"h":28},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_PowerUps3-49.png":
+{
+	"frame": {"x":1,"y":1,"w":16,"h":24},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":4,"w":16,"h":24},
+	"sourceSize": {"w":16,"h":28},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_PowerUps3-50.png":
+{
+	"frame": {"x":19,"y":1,"w":16,"h":24},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":4,"w":16,"h":24},
+	"sourceSize": {"w":16,"h":28},
+	"anchor": {"x":0.5,"y":1}
+}},
+"animations": {
+	"HC_PowerUps3": ["HC_PowerUps3-48.png","HC_PowerUps3-49.png","HC_PowerUps3-50.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "item-sprout.png",
+	"format": "RGBA8888",
+	"size": {"w":53,"h":26},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:59c58a1abfd62d4d072971b40576a5bc:e480c299dc7c3aaca0fde99782ae2f5f:afb0576f18b5dafed27c7a9dafc91bad$"
+}
+}

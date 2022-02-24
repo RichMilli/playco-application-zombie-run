@@ -1,0 +1,42 @@
+{"frames": {
+
+"HC_PowerUps1-6.png":
+{
+	"frame": {"x":1,"y":46,"w":13,"h":19},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":9,"w":13,"h":19},
+	"sourceSize": {"w":16,"h":28},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_PowerUps1-7.png":
+{
+	"frame": {"x":1,"y":24,"w":13,"h":20},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":8,"w":13,"h":20},
+	"sourceSize": {"w":16,"h":28},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_PowerUps1-8.png":
+{
+	"frame": {"x":1,"y":1,"w":13,"h":21},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":7,"w":13,"h":21},
+	"sourceSize": {"w":16,"h":28},
+	"anchor": {"x":0.5,"y":1}
+}},
+"animations": {
+	"HC_PowerUps1": ["HC_PowerUps1-6.png","HC_PowerUps1-7.png","HC_PowerUps1-8.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "item-chip.png",
+	"format": "RGBA8888",
+	"size": {"w":15,"h":66},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:215e96b62c1aab17b12e310247743918:ce6955f62ac706ff0be0e395404fd09e:d1e6038d3fef62333a9b0dc469424606$"
+}
+}

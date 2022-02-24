@@ -35,6 +35,8 @@ export class Player {
     private currentPath: {x: number, y: number}[] = null!;
     private currentTarget: {x: number, y: number} = null!;
 
+    private hitTime: number = 0;
+
     constructor(frameNames: string[], isZombie?: boolean) {
         const frames = frameNames.map(n => {
             return PIXI.Texture.from(n);
@@ -129,6 +131,18 @@ export class Player {
         const speed = (this.isZombie ? this.zombieSpeed : this.speed)
         this.sprite.x += speed * x * delta;
         this.sprite.y -= speed * y * delta;
+
+        // Hit Time
+        if (this.hitTime > 0) {
+            this.hitTime -= delta / 60;
+            if (this.hitTime < 0) {
+                this.hitTime = 0;
+            }
+        }
+
+        // Hit animation
+        this.sprite.alpha = this.hitTime > 0 ? 
+            Math.max((Math.sin(this.hitTime * 25) + 1) / 2, 0.4) : 1;
     }
 
     setZombie(isZombie: boolean): void {
@@ -255,5 +269,13 @@ export class Player {
                 }
             }
         }
+    }
+
+    setIsHit(hitTime?: number): void {
+        this.hitTime = hitTime || 1; // hit delay
+    }
+
+    getIsHit(): boolean {
+        return !!this.hitTime;
     }
 }

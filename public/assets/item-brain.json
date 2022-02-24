@@ -1,0 +1,42 @@
+{"frames": {
+
+"HC_PowerUps3-57.png":
+{
+	"frame": {"x":35,"y":1,"w":15,"h":20},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":8,"w":15,"h":20},
+	"sourceSize": {"w":16,"h":28},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_PowerUps3-58.png":
+{
+	"frame": {"x":18,"y":1,"w":15,"h":21},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":7,"w":15,"h":21},
+	"sourceSize": {"w":16,"h":28},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_PowerUps3-59.png":
+{
+	"frame": {"x":1,"y":1,"w":15,"h":22},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":6,"w":15,"h":22},
+	"sourceSize": {"w":16,"h":28},
+	"anchor": {"x":0.5,"y":1}
+}},
+"animations": {
+	"HC_PowerUps3": ["HC_PowerUps3-57.png","HC_PowerUps3-58.png","HC_PowerUps3-59.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "item-brain.png",
+	"format": "RGBA8888",
+	"size": {"w":51,"h":24},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:087c21bfee2f5467464c793097ecfa4c:8877615060dd3665c5f34b2ee7c9e823:af51cd67f050f700e0db3cb31e7c876e$"
+}
+}

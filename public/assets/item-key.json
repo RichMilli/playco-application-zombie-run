@@ -1,0 +1,42 @@
+{"frames": {
+
+"HC_PowerUps1-51.png":
+{
+	"frame": {"x":1,"y":44,"w":13,"h":18},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":2,"y":10,"w":13,"h":18},
+	"sourceSize": {"w":16,"h":28},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_PowerUps1-52.png":
+{
+	"frame": {"x":1,"y":23,"w":13,"h":19},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":2,"y":9,"w":13,"h":19},
+	"sourceSize": {"w":16,"h":28},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_PowerUps1-53.png":
+{
+	"frame": {"x":1,"y":1,"w":13,"h":20},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":2,"y":8,"w":13,"h":20},
+	"sourceSize": {"w":16,"h":28},
+	"anchor": {"x":0.5,"y":1}
+}},
+"animations": {
+	"HC_PowerUps1": ["HC_PowerUps1-51.png","HC_PowerUps1-52.png","HC_PowerUps1-53.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "item-key.png",
+	"format": "RGBA8888",
+	"size": {"w":15,"h":63},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:f77bd2ce2d67852e8bdd3343088be11e:00bdb218dd2d00d245ada79567f71ef5:e3bccc75b5542baebf45416921ebc9ba$"
+}
+}

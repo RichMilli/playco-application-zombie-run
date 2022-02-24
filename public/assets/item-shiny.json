@@ -1,0 +1,42 @@
+{"frames": {
+
+"$Sparkle-0.png":
+{
+	"frame": {"x":34,"y":1,"w":10,"h":10},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":6,"y":8,"w":10,"h":10},
+	"sourceSize": {"w":24,"h":24},
+	"anchor": {"x":0.5,"y":1}
+},
+"$Sparkle-1.png":
+{
+	"frame": {"x":19,"y":1,"w":13,"h":13},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":5,"y":6,"w":13,"h":13},
+	"sourceSize": {"w":24,"h":24},
+	"anchor": {"x":0.5,"y":1}
+},
+"$Sparkle-2.png":
+{
+	"frame": {"x":1,"y":1,"w":16,"h":16},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":3,"y":5,"w":16,"h":16},
+	"sourceSize": {"w":24,"h":24},
+	"anchor": {"x":0.5,"y":1}
+}},
+"animations": {
+	"$Sparkle": ["$Sparkle-0.png","$Sparkle-1.png","$Sparkle-2.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "item-shiny.png",
+	"format": "RGBA8888",
+	"size": {"w":45,"h":18},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:69c590762e5535cd74a465aad0466010:995ebe1359e20f564d9046361a65b455:fdc26829e906c4fad18dbcba42b026a5$"
+}
+}
