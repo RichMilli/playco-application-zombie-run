@@ -5,10 +5,14 @@ import {Player} from './player';
 import {Input} from './input';
 import { MapLoader } from './map-loader';
 
+import {Bump} from './../external/bump';
+import e from 'express';
+
 export class Game {
 
     private app: PIXI.Application = null!;
     private viewport: Viewport = null!;
+    private bump: Bump = null!;
 
     private input: Input = null!;
     private player: Player = null!;
@@ -47,6 +51,10 @@ export class Game {
         
         app.stage.addChild(viewport);
         viewport.scale.set(this.scale);
+
+        // Collision detection
+        const bump = new Bump(PIXI);
+        this.bump = bump;
 
         // Input
         const input = new Input();
@@ -171,73 +179,93 @@ export class Game {
             this.viewport.moveCenter(pos[0], pos[1]);
         }
     }
+    
+    private ySorting(a: number, b: number): number {
+        if (a < b) {
+            return -1;
+        } else if (a > b) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
 
     private updateZSorting(): void {
-        // TO DO - Add rules for different layers
-
-        // Update order on the stage based on current y position (based on anchor)
-        // If they are dead they stay on the ground (need more configuration here)
-
-        // Really bad sorting - will fix this
+        // Map and "player" based sorting
 
         this.viewport.children.sort((a, b) => {
 
-            if (a.name && b.name && a.name === b.name && a.name === 'player') {
-                if(a.y < b.y) {
-                    return -1;
-                } else if (a.y > b.y) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            } else if (a.name && b.name && a.name === 'player' && b.name === 'map') {
-                return 1;
-            } else if (a.name && b.name && a.name === 'map' && b.name === 'player') {
-                return -1;
-            } else if (a.name && b.name && a.name === 'map' && b.name === 'map') {
-                if(a.y < b.y) {
-                    return -1;
-                } else if (a.y > b.y) {
-                    return 1;
-                } else {
-                    return 0;
+            if (a.name && b.name) {
+                if ((a.name.startsWith('map_') || a.name === 'player') && b.name.startsWith('map_')) {
+                    if (b.name.includes('Above')) {
+                        return -1;
+                    } else if (b.name.includes('Middle')) {
+                        return this.ySorting(a.y, b.y);
+                    } else if (b.name.includes('Below')) {
+                        return 1;
+                    }
+                } else if (a.name.startsWith('map_') && b.name === 'player') {
+                    if (a.name.includes('Above')) {
+                        return 1;
+                    } else if (a.name.includes('Middle')) {
+                        return this.ySorting(a.y, b.y);
+                    } else if (a.name.includes('Below')) {
+                        return -1;
+                    }
+                } else if (a.name === 'player' && b.name === 'player') {
+                    return this.ySorting(a.y, b.y);
                 }
             }
 
             return -1;
-            
         });
     }
 
-    private doIntersect(a: PIXI.Rectangle, b: PIXI.Rectangle): boolean {
-        return a.x + a.width > b.x &&
-            a.x < b.x + b.width &&
-            a.y + a.height > b.y &&
-            a.y < b.y + b.height;
-    }
-    
     private checkCollisions(): void {
         this.checkPlayerZombieCollisions();
+        this.checkPlayerMapCollisions();
+
+        // Probably not necessary once pathfinding is set up
+        // this.checkZombieMapCollisions();
     }
 
     private checkPlayerZombieCollisions(): void {
-        // Check if player and zombies collide
         if (this.player && this.zombies && this.zombies.length > 0) {
             const player = this.player;
-            const playerBounds = player.getBounds();
 
-            const zombies = this.zombies;
+            const zombies = this.zombies.map(z => z.getSprite());
 
-            for (const zombie of zombies) {
-                const zombBound = zombie.getBounds();
+            (this.bump as any).hit(player.getSprite(), zombies, false, false, false, (collision: any, sprite: any) => {
+                // console.log('zombie collision', collision); // gives direction
+            })
+        }
+    }
 
-                const interesct = this.doIntersect(playerBounds, zombBound);
+    private checkPlayerMapCollisions(): void {
+        if (this.player && this.viewport && this.viewport.children) {
+            const player = this.player;
 
-                if (interesct) {
-                    // console.log('intersects', interesct);
-                }
-                
-            }
+            // Get map elements that have collisions
+            const mapCollisionTiles = this.viewport.children.filter(c => c.name.toLowerCase().endsWith('_collide'));
+
+            (this.bump as any).hit(player.getSprite(), mapCollisionTiles, true, false, false, (collision: any, sprite: any) => {
+                // console.log('stage collision', collision); // gives direction
+            });
+        }
+    }
+
+    private checkZombieMapCollisions(): void {
+        if (this.zombies && this.zombies.length > 0 && this.viewport && this.viewport.children) {
+            const zombies = this.zombies.map(z => z.getSprite());
+
+            // Get map elements that have collisions
+            const mapCollisionTiles = this.viewport.children.filter(c => c.name.toLowerCase().endsWith('_collide'));
+
+            for (const z of zombies) {
+                (this.bump as any).hit(z, mapCollisionTiles, true, false, false, (collision: any, sprite: any) => {
+                    // console.log('stage collision', collision); // gives direction
+                });
+            }            
         }
     }
     

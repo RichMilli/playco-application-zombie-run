@@ -49,7 +49,7 @@ export class MapLoader {
                                 let y = Math.floor(j / c.width);
 
                                 const sprite = new PIXI.Sprite(texture);
-                                sprite.name = 'map';
+                                sprite.name = 'map_' + l.name;
                                 sprite.x = (c.x + x) * c.width;
                                 sprite.y = (c.y + y) * c.height;
                                 sprite.anchor.set(0.5);
