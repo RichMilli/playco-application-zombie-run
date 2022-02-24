@@ -31,6 +31,10 @@ export class Player {
 
     private sprite: PIXI.AnimatedSprite;
 
+    private findingPath: boolean = false;
+    private currentPath: {x: number, y: number}[] = null!;
+    private currentTarget: {x: number, y: number} = null!;
+
     constructor(frameNames: string[], isZombie?: boolean) {
         const frames = frameNames.map(n => {
             return PIXI.Texture.from(n);
@@ -214,5 +218,42 @@ export class Player {
 
     getBounds(): PIXI.Rectangle {
         return this.sprite.getBounds();
+    }
+
+    setNewPath(path: { x: number, y: number }[]): void {
+        this.currentPath = path;
+    }
+
+    getCurrentPath(): { x: number, y: number }[] {
+        return this.currentPath;
+    }
+
+    setFindingPath(findingPath: boolean): void {
+        this.findingPath = findingPath;
+    }
+
+    getFindingPath(): boolean {
+        return this.findingPath;
+    }
+
+    onPathTick(): void {
+        if (this.currentPath) {
+            if (!this.currentTarget) {
+                const target = this.currentPath.shift();
+                this.currentTarget = target ? target : null!;
+            }
+
+            if (this.currentTarget) {
+                this.followPosition(this.currentTarget.x, this.currentTarget.y);
+
+                // Reached target
+                if (this.currentTarget.x === Math.floor(this.sprite.x) && this.currentTarget.y === Math.floor(this.sprite.y)) {
+                    this.currentTarget = null!;
+                    if (this.currentPath && this.currentPath.length === 0) {
+                        this.currentPath = null!;
+                    }
+                }
+            }
+        }
     }
 }

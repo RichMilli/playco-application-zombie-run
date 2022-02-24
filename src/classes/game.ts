@@ -6,13 +6,16 @@ import {Input} from './input';
 import { MapLoader } from './map-loader';
 
 import {Bump} from './../external/bump';
-import e from 'express';
+import {js as EasyStar} from 'easystarjs';
 
 export class Game {
 
     private app: PIXI.Application = null!;
     private viewport: Viewport = null!;
     private bump: Bump = null!;
+    private easyStar: EasyStar = null!;
+
+    private map: MapLoader = null!;
 
     private input: Input = null!;
     private player: Player = null!;
@@ -22,7 +25,6 @@ export class Game {
     private readonly width = 800;
     private readonly height = 600;
     private readonly scale = 2;
-    
 
     constructor() {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
@@ -56,6 +58,10 @@ export class Game {
         const bump = new Bump(PIXI);
         this.bump = bump;
 
+        // Path finding
+        const easyStar = new EasyStar();
+        this.easyStar = easyStar;
+
         // Input
         const input = new Input();
         this.input = input;        
@@ -78,7 +84,49 @@ export class Game {
         }
     }
 
-    private loadAssets() {
+    private loadMap(tileData: any, tileTextures: any, mapData: any): void {
+        if (!tileData || !tileTextures || !mapData) return;
+
+        const mapLoader = new MapLoader(tileData, tileTextures, mapData);
+        const sprites = mapLoader.getMapSprites();
+        if (sprites) {
+            sprites.forEach(s => this.viewport.addChild(s));
+        }
+
+        const collisionGrid = mapLoader.getCollisionGrid();
+        const grid = collisionGrid.map(r => r.map(c => c.val));
+
+        this.map = mapLoader;
+        console.log('setting grid', grid);
+
+        this.easyStar.setGrid(grid);
+        this.easyStar.setAcceptableTiles([0]);
+    }
+
+    private setupPlayer(playerFrames: any[]): void {
+        const p = new Player(playerFrames);
+        this.player = p;
+
+        const sprite = p.getSprite();
+
+        this.viewport.addChild(sprite);
+        this.viewport.follow(sprite);
+    }
+
+    private loadZombies(zombieFrames: any[]): void {
+        for (let i = 0; i < 10; i++) {
+            const zombiePos = this.getRandomWorldPosition();
+
+            const zombie = new Player(zombieFrames);
+            zombie.setPosition(zombiePos.x, zombiePos.y);
+            zombie.setZombie(true);
+            this.viewport.addChild(zombie.getSprite());
+
+            this.zombies.push(zombie);
+        }
+    }
+
+    private loadAssets(): void {
         if (this.app) {
             // Load first girl character sprite
             this.app.loader
@@ -87,50 +135,23 @@ export class Game {
                 .add('tiles-data', '/assets/hospital-tiles.json')
                 .add('tiles-image', '/assets/hospital-tiles.png')
                 .add('map-data', '/assets/maptest.json')
-                .load((e: any, r: any) => {
+                .load((e: PIXI.Loader, r: {[key: string]: PIXI.LoaderResource} ) => {
+
+                    // Load map
+                    if (r && r['tiles-data'] && r['tiles-image'] && r['map-data']) {
+                        this.loadMap(r['tiles-data'].data, r['tiles-image'].texture, r['map-data'].data);
+                    }
+
                     // Player
-                    if (r && r['girl1']) {
-                        const res = r['girl1'];
-                        const frameNames = res.data && res.data.frames ? Object.keys(res.data.frames) : [];
-
-                        const p = new Player(frameNames);
-                        this.player = p;
-            
-                        const sprite = p.getSprite();
-
-                        this.viewport.addChild(sprite);
-                        //this.viewport.follow(sprite);
+                    if (r && r['girl1'] && r['girl1'].data && r['girl1'].data.frames) {
+                        this.setupPlayer(Object.keys(r['girl1'].data.frames));
+                        //
                     }
 
                     // Zombies
-                    if (r && r['girl2']) {
-                        const res = r['girl2'];
-                        const frameNames = res.data && res.data.frames ? Object.keys(res.data.frames) : [];
-
-                        for (let i = 0; i < 10; i++) {
-                            const x = this.app.stage.width * Math.random();
-                            const y = this.app.stage.height * Math.random();
-
-                            const z = new Player(frameNames);
-                            z.setPosition(x, y);
-                            z.setZombie(true);
-                            this.viewport.addChild(z.getSprite());
-
-                            this.zombies.push(z);
-                        }
-                    }
-
-                    if (r && r['tiles-data'] && r['tiles-image'] && r['map-data']) {
-                        const tileData = r['tiles-data'].data;
-                        const tileTextures = r['tiles-image'].texture;
-                        const mapData = r['map-data'].data;
-
-                        const mapLoader = new MapLoader(tileData, tileTextures, mapData);
-                        const sprites = mapLoader.getMapSprites();
-                        if (sprites) {
-                            sprites.forEach(s => this.viewport.addChild(s));
-                        }
-                    }
+                    if (r && r['girl2'] && r['girl2'].data && r['girl2'].data.frames) {
+                        this.loadZombies(Object.keys(r['girl2'].data.frames));
+                    }                    
                 });
         }
     }
@@ -153,27 +174,87 @@ export class Game {
             })
     }
 
-    private gameLoop(delta: number): void {
-        if (this.player && this.input) {
-            const player = this.player;
-            player.setIsMovingForward(this.input.getKeyState(87) || false); // w
-            player.setIsMovingBackward(this.input.getKeyState(83) || false); // d
-            player.setIsMovingLeft(this.input.getKeyState(65) || false); // a
-            player.setIsMovingRight(this.input.getKeyState(68) || false); // d
-            player.update(delta);
-            
-            const pos = player.getPosition();
-
-            // TO DO - Boids to scatter
-            for (const zombie of this.zombies) {
-                zombie.followPosition(pos[0], pos[1]);
-                zombie.update(delta);
-            }
+    private getRandomGridPosition(): {x: number, y: number} {
+        if (this.map) {
+            return this.map.getRandomGridGroundPosition();    
         }
+
+        return null!;
+    }
+
+    private getRandomWorldPosition(): {x: number, y: number} {
+        const pos = this.getRandomGridPosition();
+        const collisionGrid = this.map ? this.map.getCollisionGrid() : null;
+        if (pos && collisionGrid) {
+            const gridItem = collisionGrid[pos.y][pos.x];
+
+            return {
+                x: gridItem.x,
+                y: gridItem.y
+            };
+        }
+
+        return null!;
+    }    
+
+    private gameLoop(delta: number): void {
+        // Update player
+        this.updatePlayer(delta);
+
+        // Update zombie position
+        this.updateZombies(delta);
 
         this.updateZSorting();
         this.checkCollisions();
 
+        // Update viewport
+        this.updateViewport();
+    }
+
+    private updatePlayer(delta: number): void {
+        if (!this.player || !this.input) return;
+
+        const player = this.player;
+        player.setIsMovingForward(this.input.getKeyState(87) || false); // w
+        player.setIsMovingBackward(this.input.getKeyState(83) || false); // d
+        player.setIsMovingLeft(this.input.getKeyState(65) || false); // a
+        player.setIsMovingRight(this.input.getKeyState(68) || false); // d
+        player.update(delta);
+    }
+
+    private updateZombies(delta: number): void {
+        // Give zombie new path if it does not have one
+        for (const zombie of this.zombies) {
+            if (!zombie.getCurrentPath() && !zombie.getFindingPath()) {
+                
+                const pos = zombie.getPosition();
+
+                if (this.map) {
+                    const gridPos = this.map.getGridReferencePosition(pos[0], pos[1]);
+                    if (gridPos) {
+                        zombie.setFindingPath(true);
+                        const newPos = this.getRandomGridPosition();
+                        this.easyStar.findPath(gridPos.x, gridPos.y, newPos.x, newPos.y, (path) => {
+                            if (path) {
+                                const adjustedPath = this.map.getMapPositionsFromPath(path);
+                                zombie.setNewPath(adjustedPath);
+                            }
+
+                            zombie.setFindingPath(false);
+                        });
+                    }
+                }
+            }
+
+            zombie.onPathTick();
+            zombie.update(delta);
+        }
+
+        // Update easy star on tick
+        this.easyStar.calculate(); // working!
+    }
+
+    private updateViewport(): void {
         if (this.viewport && this.player) {
             const pos = this.player.getPosition();
             this.viewport.moveCenter(pos[0], pos[1]);
@@ -224,9 +305,6 @@ export class Game {
     private checkCollisions(): void {
         this.checkPlayerZombieCollisions();
         this.checkPlayerMapCollisions();
-
-        // Probably not necessary once pathfinding is set up
-        // this.checkZombieMapCollisions();
     }
 
     private checkPlayerZombieCollisions(): void {
@@ -252,21 +330,5 @@ export class Game {
                 // console.log('stage collision', collision); // gives direction
             });
         }
-    }
-
-    private checkZombieMapCollisions(): void {
-        if (this.zombies && this.zombies.length > 0 && this.viewport && this.viewport.children) {
-            const zombies = this.zombies.map(z => z.getSprite());
-
-            // Get map elements that have collisions
-            const mapCollisionTiles = this.viewport.children.filter(c => c.name.toLowerCase().endsWith('_collide'));
-
-            for (const z of zombies) {
-                (this.bump as any).hit(z, mapCollisionTiles, true, false, false, (collision: any, sprite: any) => {
-                    // console.log('stage collision', collision); // gives direction
-                });
-            }            
-        }
-    }
-    
+    }    
 }
