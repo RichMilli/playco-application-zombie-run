@@ -14,21 +14,9 @@ export class Item {
 
     constructor(frameNames: string[], x: number, y: number, itemType: ItemNames) {
         this.itemType = itemType;
+        this.setLifeTime();
 
-        const frames = frameNames.map(n => {
-            return PIXI.Texture.from(n);
-        });
-
-        const sprite = new PIXI.AnimatedSprite(frames);
-        sprite.x = x;
-        sprite.y = y;
-        sprite.name = 'item';
-        sprite.anchor.set(0.5);
-        sprite.animationSpeed = this.animationSpeed;
-        (sprite as any).circular = true;
-        sprite.play();
-
-        this.sprite = sprite;
+        this.sprite = this.createSprite(frameNames, x, y);
     }
 
     private setLifeTime(): void {
@@ -36,7 +24,7 @@ export class Item {
 
         switch(this.itemType)  {
             case ItemNames.ITEM_BRAIN:
-                lifeTime = 30;
+                lifeTime = 30; 
                 break;
             case ItemNames.ITEM_CHIP:
                 lifeTime = 30;
@@ -59,6 +47,22 @@ export class Item {
         }
 
         this.lifeTime = lifeTime;
+    }
+
+    private createSprite(frameNames: string[], x: number, y: number): PIXI.AnimatedSprite {
+        const frames = frameNames.map(n => {
+            return PIXI.Texture.from(n);
+        });
+
+        const sprite = new PIXI.AnimatedSprite(frames);
+        sprite.x = x;
+        sprite.y = y;
+        sprite.name = 'item';
+        sprite.anchor.set(0.5);
+        sprite.animationSpeed = this.animationSpeed;
+        sprite.play();
+
+        return sprite;
     }
 
     getItemType(): ItemNames {

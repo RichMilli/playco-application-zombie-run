@@ -109,21 +109,17 @@ export class MapLoader {
 
         // Load map layers
         if (mapData.layers) {
-            mapData.layers.forEach((l: any, i: number) => {
-                // TO DO - Order the layers correctly
-                // console.log('layer', l);
+            mapData.layers.forEach((l: any) => {
                 if (l.chunks) {
                     l.chunks.forEach((c: any) => {
-                        // console.log('chunk', c);
-
                         if (c.data) {
-                            c.data.forEach((d: number, j: number) => {
+                            c.data.forEach((d: number, i: number) => {
                                 const texture = d > 0 ? this.mapTextures[d - 1] : null;
 
                                 if (!texture) return;
 
-                                const x = j % c.width;
-                                const y = Math.floor(j / c.width);
+                                const x = i % c.width;
+                                const y = Math.floor(i / c.width);
 
                                 const sx = (c.x + x) * c.width;
                                 const sy = (c.y + y) * c.height;
@@ -156,8 +152,6 @@ export class MapLoader {
         const maxY = Math.max(...tempGrid.map(g => g.y));
         
         const size = 16;
-        const w = maxX - minX;
-        const h = maxY - minY;
 
         const newGrid: GridItem[][] = [];
 
@@ -176,9 +170,6 @@ export class MapLoader {
         }
 
         this.collisionGrid = newGrid;
-
-        //console.log('grid items', tempGrid, minX, maxX, minY, maxY, 'w', w, 'h', h, 'size', w / 16, h / 16);
-        console.log('new grid', newGrid);
     }
 
     loadTileMap(textureMetadata: any, tileTexture: PIXI.BaseTexture, mapData: any): void {
