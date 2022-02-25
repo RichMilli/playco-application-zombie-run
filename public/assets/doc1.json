@@ -1,0 +1,251 @@
+{"frames": {
+
+"!HC_Humans2_Dead-0.png":
+{
+	"frame": {"x":1,"y":219,"w":23,"h":26},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":5,"y":6,"w":23,"h":26},
+	"sourceSize": {"w":32,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"!HC_Humans2_Dead-6.png":
+{
+	"frame": {"x":29,"y":220,"w":23,"h":26},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":5,"y":6,"w":23,"h":26},
+	"sourceSize": {"w":32,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Humans2A-0.png":
+{
+	"frame": {"x":1,"y":1,"w":15,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":5,"w":15,"h":27},
+	"sourceSize": {"w":16,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Humans2A-1.png":
+{
+	"frame": {"x":1,"y":103,"w":16,"h":28},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":4,"w":16,"h":28},
+	"sourceSize": {"w":16,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Humans2A-2.png":
+{
+	"frame": {"x":31,"y":103,"w":16,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":5,"w":16,"h":27},
+	"sourceSize": {"w":16,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Humans2A-12.png":
+{
+	"frame": {"x":30,"y":1,"w":15,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":5,"w":15,"h":27},
+	"sourceSize": {"w":16,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Humans2A-13.png":
+{
+	"frame": {"x":1,"y":18,"w":15,"h":28},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":4,"w":15,"h":28},
+	"sourceSize": {"w":16,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Humans2A-14.png":
+{
+	"frame": {"x":31,"y":18,"w":15,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":5,"w":15,"h":27},
+	"sourceSize": {"w":16,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Humans2A-24.png":
+{
+	"frame": {"x":1,"y":35,"w":15,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":5,"w":15,"h":27},
+	"sourceSize": {"w":16,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Humans2A-25.png":
+{
+	"frame": {"x":30,"y":35,"w":15,"h":28},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":4,"w":15,"h":28},
+	"sourceSize": {"w":16,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Humans2A-26.png":
+{
+	"frame": {"x":1,"y":52,"w":15,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":5,"w":15,"h":27},
+	"sourceSize": {"w":16,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Humans2A-36.png":
+{
+	"frame": {"x":30,"y":52,"w":15,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":5,"w":15,"h":27},
+	"sourceSize": {"w":16,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Humans2A-37.png":
+{
+	"frame": {"x":1,"y":121,"w":16,"h":28},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":4,"w":16,"h":28},
+	"sourceSize": {"w":16,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Humans2A-38.png":
+{
+	"frame": {"x":1,"y":69,"w":15,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":5,"w":15,"h":27},
+	"sourceSize": {"w":16,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Zombies2C-0.png":
+{
+	"frame": {"x":31,"y":121,"w":17,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":5,"w":17,"h":27},
+	"sourceSize": {"w":20,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Zombies2C-1.png":
+{
+	"frame": {"x":1,"y":139,"w":17,"h":28},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":4,"w":17,"h":28},
+	"sourceSize": {"w":20,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Zombies2C-2.png":
+{
+	"frame": {"x":31,"y":140,"w":17,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":5,"w":17,"h":27},
+	"sourceSize": {"w":20,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Zombies2C-12.png":
+{
+	"frame": {"x":1,"y":158,"w":18,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":5,"w":18,"h":27},
+	"sourceSize": {"w":20,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Zombies2C-13.png":
+{
+	"frame": {"x":30,"y":159,"w":18,"h":28},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":4,"w":18,"h":28},
+	"sourceSize": {"w":20,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Zombies2C-14.png":
+{
+	"frame": {"x":1,"y":198,"w":19,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":5,"w":19,"h":27},
+	"sourceSize": {"w":20,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Zombies2C-24.png":
+{
+	"frame": {"x":1,"y":178,"w":18,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":2,"y":5,"w":18,"h":27},
+	"sourceSize": {"w":20,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Zombies2C-25.png":
+{
+	"frame": {"x":30,"y":179,"w":18,"h":28},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":2,"y":4,"w":18,"h":28},
+	"sourceSize": {"w":20,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Zombies2C-26.png":
+{
+	"frame": {"x":30,"y":199,"w":19,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":5,"w":19,"h":27},
+	"sourceSize": {"w":20,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Zombies2C-36.png":
+{
+	"frame": {"x":30,"y":69,"w":15,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":2,"y":5,"w":15,"h":27},
+	"sourceSize": {"w":20,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Zombies2C-37.png":
+{
+	"frame": {"x":1,"y":86,"w":15,"h":28},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":2,"y":4,"w":15,"h":28},
+	"sourceSize": {"w":20,"h":32},
+	"anchor": {"x":0.5,"y":1}
+},
+"HC_Zombies2C-38.png":
+{
+	"frame": {"x":31,"y":86,"w":15,"h":27},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":2,"y":5,"w":15,"h":27},
+	"sourceSize": {"w":20,"h":32},
+	"anchor": {"x":0.5,"y":1}
+}},
+"animations": {
+	"!HC_Humans2_Dead": ["!HC_Humans2_Dead-0.png","!HC_Humans2_Dead-6.png"],
+	"HC_Humans2A": ["HC_Humans2A-0.png","HC_Humans2A-1.png","HC_Humans2A-2.png","HC_Humans2A-12.png","HC_Humans2A-13.png","HC_Humans2A-14.png","HC_Humans2A-24.png","HC_Humans2A-25.png","HC_Humans2A-26.png","HC_Humans2A-36.png","HC_Humans2A-37.png","HC_Humans2A-38.png"],
+	"HC_Zombies2C": ["HC_Zombies2C-0.png","HC_Zombies2C-1.png","HC_Zombies2C-2.png","HC_Zombies2C-12.png","HC_Zombies2C-13.png","HC_Zombies2C-14.png","HC_Zombies2C-24.png","HC_Zombies2C-25.png","HC_Zombies2C-26.png","HC_Zombies2C-36.png","HC_Zombies2C-37.png","HC_Zombies2C-38.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "doc1.png",
+	"format": "RGBA8888",
+	"size": {"w":59,"h":244},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:5cd766be0c384b6ccebc1a9719cafead:80f2eeb0bdc7d5fcd718c9222b3c2910:594d15946773f8e326f7de12503dd296$"
+}
+}

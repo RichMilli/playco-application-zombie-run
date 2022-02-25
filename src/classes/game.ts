@@ -8,7 +8,6 @@ import { MapLoader } from './map-loader';
 import {Bump} from './../external/bump';
 import {js as EasyStar} from 'easystarjs';
 import { Item } from './item';
-import e from 'express';
 import { ItemNames } from '../enums/item-names';
 
 export class Game {
@@ -35,6 +34,10 @@ export class Game {
     private playerHealth: number = 100;
     private playerScore: number = 0;
 
+    private playerHealthUI: PIXI.Graphics = null!;
+    private playerScoreUI: PIXI.Text = null!;
+    private playerZombieTime: number = null!;
+
     constructor() {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
@@ -42,7 +45,7 @@ export class Game {
         const app = new PIXI.Application({
             width: this.width,
             height: this.height,
-            backgroundColor: 0xff00ff,
+            backgroundColor: 0x000000,
             resolution: window.devicePixelRatio || 1
         });
 
@@ -106,7 +109,6 @@ export class Game {
         const grid = collisionGrid.map(r => r.map(c => c.val));
 
         this.map = mapLoader;
-        console.log('setting grid', grid);
 
         this.easyStar.setGrid(grid);
         this.easyStar.setAcceptableTiles([0]);
@@ -115,6 +117,8 @@ export class Game {
     private setupPlayer(playerFrames: any[]): void {
         const p = new Player(playerFrames);
         this.player = p;
+        this.updatePlayerHealthUI();
+        this.updatePlayerScoreUI();
         p.setIsHit(3);
 
         const sprite = p.getSprite();
@@ -127,35 +131,91 @@ export class Game {
         for (let i = 0; i < 10; i++) {
             const zombiePos = this.getRandomWorldPosition();
 
-            const zombie = new Player(zombieFrames);
-            zombie.setPosition(zombiePos.x, zombiePos.y);
-            zombie.setZombie(true);
-            this.viewport.addChild(zombie.getSprite());
-
-            this.zombies.push(zombie);
+            if (zombiePos) {
+                const zombie = new Player(zombieFrames);
+                zombie.setPosition(zombiePos.x, zombiePos.y);
+                zombie.setZombie(true);
+                this.viewport.addChild(zombie.getSprite());
+    
+                this.zombies.push(zombie);
+            }
         }
     }
 
-    private spawnNewItem(): void {
+    private updatePlayerHealthUI(): void {
+        if (this.playerHealthUI) {
+            this.app.stage.removeChild(this.playerHealthUI);
+            this.playerHealthUI = null!;
+        }
+
+        const graphics = new PIXI.Graphics();
+        graphics.beginFill(0x610505);
+        graphics.drawRect(20, 20, 240, 20);
+        graphics.endFill();
+
+        const r = (this.playerHealth / 100)
+
+        const color = this.player.getZombie() ? 0xAD235E : (
+            r > 0.75 ? 0x980f11 : (
+                r > 0.5 ? 0xac040c : (
+                    r > 0.25 ? 0xe2111c : (
+                        r > 0 ? 0xf40404 : 0x610505
+                    )
+                )
+            )
+        )
+
+        graphics.beginFill(color);
+        graphics.drawRect(20, 20, 240 * r, 20);
+        graphics.endFill();
+
+        this.app.stage.addChild(graphics);
+        this.playerHealthUI = graphics;
+    }
+
+    private updatePlayerScoreUI(): void {
+        if (this.playerScoreUI) {
+            this.app.stage.removeChild(this.playerScoreUI);
+            this.playerScoreUI = null!;
+        }
+
+        const textStyle = new PIXI.TextStyle({
+            fontSize: 18,
+            fontWeight: 'bold',
+            fill: 0xFFFFFF,
+            align: 'right'
+        });
+            
+        const text = new PIXI.Text(this.playerScore.toString(), textStyle);
+        text.anchor.set(1, 0.5);
+        text.position.set(this.width - 20, 20);
+
+        this.app.stage.addChild(text);
+        this.playerScoreUI = text;
+    }
+
+    private spawnNewItem(itemType: ItemNames): void {
         if (this.app && this.app.loader && this.app.loader.resources) {
-
-            const itemType = ItemNames.ITEM_SHINY;
             const itemPos = this.getRandomWorldPosition();
-            const frames = Object.keys(this.app.loader.resources[itemType].data.frames);
-            const item = new Item(frames, itemPos.x, itemPos.y, itemType);
 
-            // console.log('item', item);
-            this.viewport.addChild(item.getSprite());
-
-            // Remove item when it expires
-            item.onExpire().subscribe(() => {
-                const itemIndex = this.items.findIndex(i => i === item);
-                if (itemIndex > -1) {
-                    this.removeItem(itemIndex, false);
-                }
-            });
-
-            this.items.push(item);
+            if (itemPos) {
+                const frames = Object.keys(this.app.loader.resources[itemType].data.frames);
+                const item = new Item(frames, itemPos.x, itemPos.y, itemType);
+    
+                // console.log('item', item);
+                this.viewport.addChild(item.getSprite());
+    
+                // Remove item when it expires
+                item.onExpire().subscribe(() => {
+                    const itemIndex = this.items.findIndex(i => i === item);
+                    if (itemIndex > -1) {
+                        this.removeItem(itemIndex, false);
+                    }
+                });
+    
+                this.items.push(item);
+            }
+            
         }
     }
 
@@ -164,7 +224,15 @@ export class Game {
             const r = Math.round(Math.random() * 100000) / 100000;
     
             if (r > 0.10000 && r < 0.10500) {
-                this.spawnNewItem();
+                this.spawnNewItem(ItemNames.ITEM_SHINY);
+            } else if (r > 0.20000 && r < 0.20100) {
+                this.spawnNewItem(ItemNames.ITEM_HEALTH_PACK);
+            } else if (r > 0.30000 && r < 0.30010) {
+                this.spawnNewItem(ItemNames.ITEM_SPROUT);
+            } else if (r > 0.40000 && r < 0.40100) {
+                this.spawnNewItem(ItemNames.ITEM_BRAIN);
+            } else if (r > 0.50000 && r < 0.50002) {
+                this.spawnNewItem(ItemNames.ITEM_CHIP);
             }
         }
     }
@@ -188,13 +256,17 @@ export class Game {
 
                 switch(type)  {
                     case ItemNames.ITEM_BRAIN:
-                        // become zombie temporarily
+                        this.adjustPlayerScore(100);
+                        this.setPlayerZombieMode();
                         break;
                     case ItemNames.ITEM_CHIP:
                         // increase recovery time
+                        this.adjustPlayerScore(2500);
+                        this.adjustPlayerHealth(100);
                         break;
                     case ItemNames.ITEM_HEALTH_PACK:
-                        // increase health
+                        this.adjustPlayerScore(10);
+                        this.adjustPlayerHealth(25);
                         break;
                     case ItemNames.ITEM_KEY:
                         // add key (to get through doors)
@@ -203,14 +275,10 @@ export class Game {
                         // add keycard (to get through doors)
                         break;
                     case ItemNames.ITEM_SPROUT:
-                        // add score (bonus)
-                        this.playerScore += 500;
-                        console.log('player score', this.playerScore);
+                        this.adjustPlayerScore(500);
                         break;
                     case ItemNames.ITEM_SHINY:
-                        // add score
-                        this.playerScore += 50;
-                        console.log('player score', this.playerScore);
+                        this.adjustPlayerScore(50);
                         break;
                 }
             }
@@ -226,7 +294,7 @@ export class Game {
             this.app.loader
 
                 // Zombie sprites
-                .add('girl1', '/assets/girl4.json')
+                .add('girl1', '/assets/doc8.json')
                 .add('girl2', '/assets/girl2.json')
 
                 // Items
@@ -332,6 +400,16 @@ export class Game {
         player.setIsMovingLeft(this.input.getKeyState(65) || false); // a
         player.setIsMovingRight(this.input.getKeyState(68) || false); // d
         player.update(delta);
+
+        // Check zombie mode
+        if (this.playerZombieTime > 0 && player.getZombie()) {
+            this.playerZombieTime -= delta / 60;
+            if (this.playerZombieTime < 0) {
+                this.playerZombieTime = 0;
+                player.setZombie(false);
+                this.updatePlayerHealthUI();
+            }
+        }
     }
 
     private updateZombies(delta: number): void {
@@ -471,17 +549,36 @@ export class Game {
         }
     }
 
-    private hitPlayer(hit: number): void {
-        if (!this.player.getIsHit()) {
+    private hitPlayer(health: number, ignoreAlreadyHit?: boolean): void {
+        if (!this.player.getIsHit() || ignoreAlreadyHit) {
             this.player.setIsHit();
-            
-            this.playerHealth -= hit;
-
-            console.log('player hit', this.playerHealth);
-
-            if (this.playerHealth <= 0) {
-                this.player.setIsDead(true);
-            }
+        
+            this.adjustPlayerHealth(-health);
         }
+    }
+
+    private adjustPlayerHealth(health: number): void {
+        this.playerHealth += health;
+
+        if (this.playerHealth <= 0) {
+            this.playerHealth = 0;
+            this.player.setIsDead(true);
+        } else if (this.playerHealth > 100) {
+            this.playerHealth = 100;
+        }
+
+        this.updatePlayerHealthUI();
+    }
+
+    private adjustPlayerScore(score: number): void {
+        this.playerScore += score;
+        this.updatePlayerScoreUI();
+    }
+
+    private setPlayerZombieMode(): void {
+        this.playerZombieTime = 10;
+        this.player.setZombie(true);
+        this.hitPlayer(25, true);
+        this.updatePlayerHealthUI();
     }
 }
