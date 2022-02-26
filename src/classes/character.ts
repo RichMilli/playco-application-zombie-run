@@ -12,8 +12,8 @@ export class Character {
 
     private readonly animationSpeed: number = 0.1;
     private readonly speed: number = 1;
-    private readonly zombieSpeed: number = 0.5;
-    private readonly boostSpeed = 2;
+    private readonly zombieSpeed: number = 0.25;
+    private readonly boostSpeed = 1.5;
 
     private isMoving: boolean = false;
     private prevIsMoving: boolean = false;
@@ -39,14 +39,14 @@ export class Character {
     private hitTime: number = 0;
     private isBoosted: boolean = false;
 
-    constructor(frameNames: string[], isZombie?: boolean) {
+    constructor(frameNames: string[], speed?: number) {
+        this.speed = speed || 1;
+
         const frames = frameNames.map(n => {
             return PIXI.Texture.from(n);
         });
 
         if (!frames || frames.length !== 26) console.error('Invalid frame count');
-
-        this.isZombie = !!isZombie;
 
         // Dead textures
         this.deadTextures = frames.slice(0, 2);

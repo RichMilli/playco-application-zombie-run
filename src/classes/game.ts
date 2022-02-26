@@ -24,6 +24,7 @@ export class Game {
     private player: Character = null!;
 
     private zombies: Character[] = [];
+    private npcs: Character[] = [];
     private items: Item[] = [];
 
     private readonly width = 800;
@@ -157,6 +158,7 @@ export class Game {
     private loadZombies(): void {
         if (!this.app || !this.app.loader.resources) return;
 
+        // TO DO - Randomise
         const zombieFrames: string[] = this.app.loader.resources['girl2'] && this.app.loader.resources['girl2'].data ?
             Object.keys(this.app.loader.resources['girl2'].data.frames) : null!;
 
@@ -165,7 +167,7 @@ export class Game {
             this.zombies = [];
         }
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 1; i++) {
             const zombiePos = this.getRandomWorldPosition();
 
             if (zombiePos) {
@@ -175,6 +177,33 @@ export class Game {
                 this.viewport.addChild(zombie.getSprite());
     
                 this.zombies.push(zombie);
+            }
+        }
+    }
+
+    private loadNPCs(): void {
+        if (!this.app || !this.app.loader.resources) return;
+
+        if (this.npcs && this.npcs.length) {
+            this.npcs.forEach(n => this.viewport.removeChild(n.getSprite()));
+            this.npcs = [];
+        }
+
+        for (let i = 0; i < 10; i++) {
+            const npcPos = this.getRandomWorldPosition();
+
+            if (npcPos) {
+                const r = Math.floor(Math.random() * 8) + 1;
+                const resourceName = `doc${r}`;
+
+                const npcFrames: string[] = this.app.loader.resources[resourceName] && this.app.loader.resources[resourceName].data ?
+                    Object.keys(this.app.loader.resources[resourceName].data.frames) : null!;
+
+                const npc = new Character(npcFrames, 0.5);
+                npc.setPosition(npcPos.x, npcPos.y);
+                this.viewport.addChild(npc.getSprite());
+
+                this.npcs.push(npc);
             }
         }
     }
@@ -203,6 +232,7 @@ export class Game {
             this.loadZombies();
             
             // Load NPCs
+            this.loadNPCs();
         }
     }
 
@@ -217,7 +247,7 @@ export class Game {
         graphics.drawRect(20, 20, 240, 20);
         graphics.endFill();
 
-        const r = (this.playerHealth / 100)
+        const r = (this.playerHealth / 100);
 
         const color = this.player.getZombie() ? 0xAD235E : (
             r > 0.75 ? 0x980f11 : (
@@ -415,6 +445,16 @@ export class Game {
                 .add('girl1', '/assets/doc8.json')
                 .add('girl2', '/assets/girl2.json')
 
+                // Doctor/Zombie Sprites
+                .add('doc1', '/assets/doc1.json')
+                .add('doc2', '/assets/doc2.json')
+                .add('doc3', '/assets/doc3.json')
+                .add('doc4', '/assets/doc4.json')
+                .add('doc5', '/assets/doc5.json')
+                .add('doc6', '/assets/doc6.json')
+                .add('doc7', '/assets/doc7.json')
+                .add('doc8', '/assets/doc8.json')
+
                 // Items
                 .add(ItemNames.ITEM_BRAIN, '/assets/item-brain.json')
                 .add(ItemNames.ITEM_CHIP, '/assets/item-chip.json')
@@ -497,6 +537,9 @@ export class Game {
             // Update zombie position
             this.updateZombies(delta);
 
+            // Update NPC positions
+            this.updateNPCs(delta);
+
             this.updateZSorting();
             this.checkCollisions();
 
@@ -506,6 +549,9 @@ export class Game {
             // Spawn items
             this.spawnItems();
             this.updateItemLife(delta);
+
+            // Update easy star on tick
+            this.easyStar.calculate();
         }
     }
 
@@ -584,12 +630,45 @@ export class Game {
         // Randdomly play zombie sound (1- 5):
         const r = Math.round(Math.random() * 100000) / 100000;
         if (r > 0.20000 && r < 0.20700 * (1 + Math.min(this.playerCloseZombies, 6) / 100)) {
-            const rS = Math.floor(Math.random() * 9) + 1;
-            sound.play('zombie' + rS, {volume: 0.2 * Math.random() + 0.1});
+            this.playRandomZombieSound();
         }
+    }
 
-        // Update easy star on tick
-        this.easyStar.calculate(); // working!
+    private playRandomZombieSound() {
+        const r = Math.floor(Math.random() * 9) + 1;
+        sound.play('zombie' + r, {volume: 0.2 * Math.random() + 0.1});
+    }
+
+    private updateNPCs(delta: number): void {
+        if (!this.map) return;
+
+        // Give NPC a new path if it does not have one
+        for (const npc of this.npcs) {
+
+            const nPos = npc.getPosition();
+            if (!nPos) continue;
+
+            if (!npc.getCurrentPath() && !npc.getFindingPath()) {
+                const gridPos = this.map.getGridReferencePosition(nPos.x, nPos.y);
+                    if (gridPos) {
+                        npc.setFindingPath(true);
+
+                        const newPos = this.getRandomGridPosition(); // TO DO
+
+                        this.easyStar.findPath(gridPos.x, gridPos.y, newPos.x, newPos.y, (path) => {
+                            if (path) {
+                                const adjustedPath = this.map.getMapPositionsFromPath(path);
+                                npc.setNewPath(adjustedPath);
+                            }
+
+                            npc.setFindingPath(false);
+                        });
+                    }
+            }
+
+            npc.onPathTick();
+            npc.update(delta);
+        }
     }
 
     private updateViewport(): void {
@@ -612,20 +691,23 @@ export class Game {
     private updateZSorting(): void {
         // Map and "player" based sorting
 
-        const midLayers = ['player', 'item'];
+        const objectLayers = ['player', 'item'];
 
         this.viewport.children.sort((a, b) => {
 
             if (a.name && b.name) {
-                if ((a.name.startsWith('map_') || midLayers.includes(a.name)) && b.name.startsWith('map_')) {
+                // A - Map layer or Object layer vs. B - Map layer
+                if ((a.name.startsWith('map_') || objectLayers.includes(a.name)) && b.name.startsWith('map_')) {
                     if (b.name.includes('Above')) {
                         return -1;
                     } else if (b.name.includes('Middle')) {
                         return this.ySorting(a.y, b.y);
                     } else if (b.name.includes('Below')) {
                         return 1;
-                    }
-                } else if (a.name.startsWith('map_') && midLayers.includes(b.name)) {
+                    }    
+                } 
+                // A - Map layer vs B. Object layer
+                else if (a.name.startsWith('map_') && objectLayers.includes(b.name)) {
                     if (a.name.includes('Above')) {
                         return 1;
                     } else if (a.name.includes('Middle')) {
@@ -633,7 +715,9 @@ export class Game {
                     } else if (a.name.includes('Below')) {
                         return -1;
                     }
-                } else if (midLayers.includes(a.name) && midLayers.includes(b.name)) {
+                }
+                // A - Object layer vs B. Object layer - use y-based sorting
+                else if (objectLayers.includes(a.name) && objectLayers.includes(b.name)) {
                     return this.ySorting(a.y, b.y);
                 }
             }
@@ -646,6 +730,7 @@ export class Game {
         this.checkPlayerZombieCollisions();
         this.checkPlayerMapCollisions();
         this.checkPlayerItemCollisions();
+        this.checkZombieNpcCollisions();
     }
 
     private checkPlayerZombieCollisions(): void {
@@ -653,8 +738,8 @@ export class Game {
             const player = this.player;
             const zombies = this.zombies.map(z => z.getSprite());
 
+            // Zombie hit the player
             (this.bump as any).hit(player.getSprite(), zombies, false, false, false, (collision: any, sprite: any) => {
-                // console.log('zombie collision', collision); // gives direction
                 this.hitPlayer(5);
             });
         }
@@ -692,6 +777,33 @@ export class Game {
 
             if (found > -1) {
                 this.removeItem(found, true);
+            }
+        }
+    }
+
+    private checkZombieNpcCollisions(): void {
+        if (this.zombies && this.zombies.length > 0 && this.npcs && this.npcs.length) {
+            const zombies = this.zombies.map(z => z.getSprite());
+
+            const npcsToSplice: number[] = [];
+
+            for (let i = 0; i < this.npcs.length; i++) {
+                const hit = (this.bump as any).hit(this.npcs[i].getSprite(), zombies, false, false, false);
+
+                // If a zombie hits an NPC they become a zombie
+                if (hit) {
+                    this.npcs[i].setZombie(true);
+                    this.playRandomZombieSound();
+                    npcsToSplice.push(i);
+                }
+            }
+
+            // Switch npcs into zombie array
+            if (npcsToSplice && npcsToSplice.length) {
+                npcsToSplice.forEach(i => {
+                    const npc = this.npcs.splice(i, 1);
+                    this.zombies.push(...npc);
+                });
             }
         }
     }

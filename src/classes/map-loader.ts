@@ -103,8 +103,6 @@ export class MapLoader {
     }
 
     private loadMapData(mapData: any): void {
-        console.log('got map data', mapData);
-
         const tempGrid: GridItem[] = [];
 
         // Load map layers
