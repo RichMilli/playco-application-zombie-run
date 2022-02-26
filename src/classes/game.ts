@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { Viewport } from 'pixi-viewport';
+import { sound } from '@pixi/sound';
 
 import {Player} from './player';
 import {Input} from './input';
@@ -33,6 +34,7 @@ export class Game {
 
     private playerHealth: number = 100;
     private playerScore: number = 0;
+    private playerCloseZombies: number = 0;
 
     private playerHealthUI: PIXI.Graphics = null!;
     private playerScoreUI: PIXI.Text = null!;
@@ -46,7 +48,7 @@ export class Game {
             width: this.width,
             height: this.height,
             backgroundColor: 0x000000,
-            resolution: window.devicePixelRatio || 1
+            resolution: 1
         });
 
         this.app = app;
@@ -257,16 +259,21 @@ export class Game {
                 switch(type)  {
                     case ItemNames.ITEM_BRAIN:
                         this.adjustPlayerScore(100);
-                        this.setPlayerZombieMode();
+                        sound.play(ItemNames.ITEM_BRAIN + '_sfx');
+                        if (!this.player.getIsBoosted()) {
+                            this.setPlayerZombieMode();
+                        }
                         break;
                     case ItemNames.ITEM_CHIP:
                         // increase recovery time
                         this.adjustPlayerScore(2500);
                         this.adjustPlayerHealth(100);
+                        sound.play(ItemNames.ITEM_CHIP + '_sfx');
                         break;
                     case ItemNames.ITEM_HEALTH_PACK:
                         this.adjustPlayerScore(10);
                         this.adjustPlayerHealth(25);
+                        sound.play(ItemNames.ITEM_HEALTH_PACK + '_sfx');
                         break;
                     case ItemNames.ITEM_KEY:
                         // add key (to get through doors)
@@ -276,9 +283,13 @@ export class Game {
                         break;
                     case ItemNames.ITEM_SPROUT:
                         this.adjustPlayerScore(500);
+                        this.player.setIsBoosted(true);
+                        this.player.setIsHit(10);
+                        sound.play(ItemNames.ITEM_SPROUT + '_sfx');
                         break;
                     case ItemNames.ITEM_SHINY:
                         this.adjustPlayerScore(50);
+                        sound.play(ItemNames.ITEM_SHINY + '_sfx');
                         break;
                 }
             }
@@ -306,6 +317,31 @@ export class Game {
                 .add(ItemNames.ITEM_SPROUT, '/assets/item-sprout.json')
                 .add(ItemNames.ITEM_SHINY, '/assets/item-shiny.json')
 
+                // Item sound effects
+                .add(ItemNames.ITEM_BRAIN + '_sfx', '/assets/item-brain.wav')
+                .add(ItemNames.ITEM_CHIP + '_sfx', '/assets/item-chip.wav')
+                .add(ItemNames.ITEM_HEALTH_PACK + '_sfx', '/assets/item-health-pack.wav')
+                // .add(ItemNames.ITEM_KEY, '/assets/item-key.json')
+                // .add(ItemNames.ITEM_KEYCARD, '/assets/item-keycard.json')
+                .add(ItemNames.ITEM_SPROUT + '_sfx', '/assets/item-sprout.wav')
+                .add(ItemNames.ITEM_SHINY + '_sfx', '/assets/item-shiny.wav')
+
+                // Zombie sfx
+                .add('zombie1', '/assets/zombie1.wav')
+                .add('zombie2', '/assets/zombie2.wav')
+                .add('zombie3', '/assets/zombie3.wav')
+                .add('zombie4', '/assets/zombie4.wav')
+                .add('zombie5', '/assets/zombie5.wav')
+                .add('zombie6', '/assets/zombie6.wav')
+                .add('zombie7', '/assets/zombie7.wav')
+                .add('zombie8', '/assets/zombie8.wav')
+                .add('zombie9', '/assets/zombie9.wav')
+
+                // Other sfx
+                .add('player_hit_sfx', '/assets/player-hit.wav')
+                .add('player_death', '/assets/player-death.mp3')
+                .add('background_music', '/assets/background-music.wav')
+
                 // Map Stuff
                 .add('tiles-data', '/assets/hospital-tiles.json')
                 .add('tiles-image', '/assets/hospital-tiles.png')
@@ -328,6 +364,12 @@ export class Game {
                     if (r && r['girl2'] && r['girl2'].data && r['girl2'].data.frames) {
                         this.loadZombies(Object.keys(r['girl2'].data.frames));
                     }
+
+                    if (r && r[ItemNames.ITEM_HEALTH_PACK + '_sfx']) {
+                        //console.log(r[ItemNames.ITEM_HEALTH_PACK + '_sfx'].data.play());
+                    }
+
+                    sound.play('background_music', {volume: 0.3, loop: true});
                 });
         }
     }
@@ -412,18 +454,41 @@ export class Game {
         }
     }
 
+    private getDistance(pos1: {x: number, y: number}, pos2: {x: number, y: number}): number {
+        return Math.sqrt(Math.pow(pos2.x - pos1.x, 2) + Math.pow(pos2.y - pos1.y, 2));
+    }
+
     private updateZombies(delta: number): void {
+        if (!this.map) return;
+
+        const pPos = this.player.getPosition();
+        if (!pPos) return;
+
+        this.playerCloseZombies = 0;
+
         // Give zombie new path if it does not have one
         for (const zombie of this.zombies) {
-            if (!zombie.getCurrentPath() && !zombie.getFindingPath()) {
-                
-                const pos = zombie.getPosition();
 
-                if (this.map) {
-                    const gridPos = this.map.getGridReferencePosition(pos[0], pos[1]);
+            const zPos = zombie.getPosition();
+            if (!zPos) continue;
+
+            const distance = this.getDistance(pPos, zPos);
+
+            if (distance < 100) {
+                this.playerCloseZombies++;
+            }
+
+            if (!zombie.getCurrentPath() && !zombie.getFindingPath()) {
+                if (this.map && pPos) {
+                    const gridPos = this.map.getGridReferencePosition(zPos.x, zPos.y);
                     if (gridPos) {
                         zombie.setFindingPath(true);
-                        const newPos = this.getRandomGridPosition();
+
+                        // If close to player - follow, else
+                        // Get random position to wander on the map
+                        const newPos = distance < 100 ?
+                            this.map.getGridReferencePosition(pPos.x, pPos.y) : this.getRandomGridPosition();
+
                         this.easyStar.findPath(gridPos.x, gridPos.y, newPos.x, newPos.y, (path) => {
                             if (path) {
                                 const adjustedPath = this.map.getMapPositionsFromPath(path);
@@ -440,6 +505,13 @@ export class Game {
             zombie.update(delta);
         }
 
+        // Randdomly play zombie sound (1- 5):
+        const r = Math.round(Math.random() * 100000) / 100000;
+        if (r > 0.20000 && r < 0.20700 * (1 + Math.min(this.playerCloseZombies, 6) / 100)) {
+            const rS = Math.floor(Math.random() * 9) + 1;
+            sound.play('zombie' + rS, {volume: 0.2 * Math.random() + 0.1});
+        }
+
         // Update easy star on tick
         this.easyStar.calculate(); // working!
     }
@@ -447,7 +519,7 @@ export class Game {
     private updateViewport(): void {
         if (this.viewport && this.player) {
             const pos = this.player.getPosition();
-            this.viewport.moveCenter(pos[0], pos[1]);
+            this.viewport.moveCenter(pos.x, pos.y);
         }
     }
     
@@ -554,6 +626,7 @@ export class Game {
             this.player.setIsHit();
         
             this.adjustPlayerHealth(-health);
+            sound.play('player_hit_sfx');
         }
     }
 
@@ -563,6 +636,7 @@ export class Game {
         if (this.playerHealth <= 0) {
             this.playerHealth = 0;
             this.player.setIsDead(true);
+            sound.play('player_death');
         } else if (this.playerHealth > 100) {
             this.playerHealth = 100;
         }

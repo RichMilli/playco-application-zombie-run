@@ -4,6 +4,7 @@
   "private": true,
   "description": "demo zombie game made in react and pixi.js for my playco application",
   "dependencies": {
+    "@pixi/sound": "^4.2.0",
     "@pixi/tilemap": "^3.2.2",
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.3",

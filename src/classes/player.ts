@@ -13,6 +13,7 @@ export class Player {
     private readonly animationSpeed: number = 0.1;
     private readonly speed: number = 1;
     private readonly zombieSpeed: number = 0.5;
+    private readonly boostSpeed = 2;
 
     private isMoving: boolean = false;
     private prevIsMoving: boolean = false;
@@ -36,6 +37,7 @@ export class Player {
     private currentTarget: {x: number, y: number} = null!;
 
     private hitTime: number = 0;
+    private isBoosted: boolean = false;
 
     constructor(frameNames: string[], isZombie?: boolean) {
         const frames = frameNames.map(n => {
@@ -128,15 +130,20 @@ export class Player {
         this.prevIsMoving = this.isMoving;  
         this.isMoving = isMoving;
 
-        const speed = (this.isZombie ? this.zombieSpeed : this.speed)
+        const speed = this.isBoosted ?
+            this.boostSpeed : (this.isZombie ? this.zombieSpeed : this.speed);
         this.sprite.x += speed * x * delta;
         this.sprite.y -= speed * y * delta;
 
-        // Hit Time
+        // Hit Time - also used for boost
         if (this.hitTime > 0) {
             this.hitTime -= delta / 60;
             if (this.hitTime < 0) {
                 this.hitTime = 0;
+
+                if (this.isBoosted) {
+                    this.isBoosted = false;
+                }
             }
         }
 
@@ -190,8 +197,8 @@ export class Player {
         this.sprite.y = y;
     }
 
-    getPosition(): [number, number] {
-        return [this.sprite.x, this.sprite.y];
+    getPosition(): {x: number, y: number} {
+        return {x: this.sprite.x, y: this.sprite.y};
     }
 
     setIsMovingForward(forward: boolean): void {
@@ -277,5 +284,13 @@ export class Player {
 
     getIsHit(): boolean {
         return !!this.hitTime;
+    }
+
+    getIsBoosted(): boolean {
+        return this.isBoosted;
+    }
+
+    setIsBoosted(boosted: boolean): void {
+        this.isBoosted = boosted;
     }
 }
