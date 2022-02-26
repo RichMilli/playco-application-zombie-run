@@ -1,13 +1,13 @@
 import * as PIXI from 'pixi.js';
 
-interface PlayerStateTextures {
+interface CharacterStateTextures {
     forward: PIXI.Texture[];
     left: PIXI.Texture[];
     right: PIXI.Texture[];
     backward: PIXI.Texture[];
 }
 
-export class Player {
+export class Character {
     private prevDirection: [number, number] = [0, 0];
 
     private readonly animationSpeed: number = 0.1;
@@ -27,8 +27,8 @@ export class Player {
     private movingRight = false;
 
     private deadTextures: PIXI.Texture[];
-    private textures: PlayerStateTextures;
-    private zombieTextures: PlayerStateTextures;
+    private textures: CharacterStateTextures;
+    private zombieTextures: CharacterStateTextures;
 
     private sprite: PIXI.AnimatedSprite;
 

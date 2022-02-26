@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js';
 import { Viewport } from 'pixi-viewport';
 import { sound } from '@pixi/sound';
 
-import {Player} from './player';
+import {Character} from './character';
 import {Input} from './input';
 import { MapLoader } from './map-loader';
 
@@ -21,9 +21,9 @@ export class Game {
     private map: MapLoader = null!;
 
     private input: Input = null!;
-    private player: Player = null!;
+    private player: Character = null!;
 
-    private zombies: Player[] = [];
+    private zombies: Character[] = [];
     private items: Item[] = [];
 
     private readonly width = 800;
@@ -49,6 +49,7 @@ export class Game {
 
     constructor() {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+        PIXI.settings.ROUND_PIXELS = true;
 
         // App
         const app = new PIXI.Application({
@@ -86,15 +87,6 @@ export class Game {
         // Input
         const input = new Input();
         this.input = input;      
-        
-        // Watch click event
-        if (this.app.view) {
-            this.app.view.addEventListener('click', (e) => {
-                if (!this.isLoading && this.assetsLoaded && !this.started) {
-                    this.restart();
-                }
-            })
-        }
     }
 
     getApp() {
@@ -105,7 +97,14 @@ export class Game {
         this.loadAssets();
         this.input.start();
 
-        this.watchGameEvents();
+        // Watch stage click event
+        if (this.app.view) {
+            this.app.view.addEventListener('click', (e) => {
+                if (!this.isLoading && this.assetsLoaded && !this.started) {
+                    this.restart();
+                }
+            })
+        }
 
         if (this.app) {
             this.app.ticker.add((delta: number) => {
@@ -144,7 +143,7 @@ export class Game {
         const playerFrames: string[] = this.app.loader.resources['girl1'] && this.app.loader.resources['girl1'].data ? 
             Object.keys(this.app.loader.resources['girl1'].data.frames) : null!;
 
-        const p = new Player(playerFrames);
+        const p = new Character(playerFrames);
         this.player = p;
         this.updatePlayerHealthUI();
         this.updatePlayerScoreUI();
@@ -170,7 +169,7 @@ export class Game {
             const zombiePos = this.getRandomWorldPosition();
 
             if (zombiePos) {
-                const zombie = new Player(zombieFrames);
+                const zombie = new Character(zombieFrames);
                 zombie.setPosition(zombiePos.x, zombiePos.y);
                 zombie.setZombie(true);
                 this.viewport.addChild(zombie.getSprite());
@@ -316,7 +315,6 @@ export class Game {
                 const frames = Object.keys(this.app.loader.resources[itemType].data.frames);
                 const item = new Item(frames, itemPos.x, itemPos.y, itemType);
     
-                // console.log('item', item);
                 this.viewport.addChild(item.getSprite());
     
                 // Remove item when it expires
@@ -362,10 +360,7 @@ export class Game {
             // Remove item from viewport
             this.viewport.removeChild(this.items[itemIndex].getSprite());
             
-
-            // TO DO - Collected action
             if (collected) {
-                // do here
                 const type = this.items[itemIndex].getItemType();
 
                 switch(type)  {
@@ -377,7 +372,6 @@ export class Game {
                         }
                         break;
                     case ItemNames.ITEM_CHIP:
-                        // increase recovery time
                         this.adjustPlayerScore(2500);
                         this.adjustPlayerHealth(100);
                         sound.play(ItemNames.ITEM_CHIP + '_sfx');
@@ -415,7 +409,6 @@ export class Game {
         this.isLoading = true;
 
         if (this.app) {
-            // Load first girl character sprite
             this.app.loader
 
                 // Zombie sprites
@@ -471,24 +464,6 @@ export class Game {
                     sound.play('background_music', {volume: 0.3, loop: true});
                 });
         }
-    }
-
-    private watchGameEvents(): void {
-        // Toggle the zombie mode when the user presses space
-        this.input.onKeyPress(32)
-            .subscribe(() => {
-                const z = this.player.getZombie();
-                const d = this.player.getIsDead();
-
-                if (!z && !d) {
-                    this.player.setZombie(true);
-                } else if (z && !d) {
-                    this.player.setZombie(false);
-                    this.player.setIsDead(true);
-                } else if (!z && d) {
-                    this.player.setIsDead(false);
-                }
-            })
     }
 
     private getRandomGridPosition(): {x: number, y: number} {
@@ -692,9 +667,8 @@ export class Game {
             // Get map elements that have collisions
             const mapCollisionTiles = this.viewport.children.filter(c => c.name.toLowerCase().endsWith('_collide'));
 
-            (this.bump as any).hit(player.getSprite(), mapCollisionTiles, true, false, false, (collision: any, sprite: any) => {
-                // console.log('stage collision', collision); // gives direction
-            });
+            // Force player to collide with map
+            (this.bump as any).hit(player.getSprite(), mapCollisionTiles, true, false, false);
         }
     }   
     
