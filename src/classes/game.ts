@@ -40,6 +40,13 @@ export class Game {
     private playerScoreUI: PIXI.Text = null!;
     private playerZombieTime: number = null!;
 
+    private loadingUI: PIXI.Text = null!;
+    private clickToStartUI: PIXI.Text = null!;
+    private gameOverUI: PIXI.Text = null!;
+
+    private isLoading: boolean = true;
+    private started: boolean = false;
+
     constructor() {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
@@ -78,7 +85,16 @@ export class Game {
 
         // Input
         const input = new Input();
-        this.input = input;        
+        this.input = input;      
+        
+        // Watch click event
+        if (this.app.view) {
+            this.app.view.addEventListener('click', (e) => {
+                if (!this.isLoading && this.assetsLoaded && !this.started) {
+                    this.restart();
+                }
+            })
+        }
     }
 
     getApp() {
@@ -98,7 +114,13 @@ export class Game {
         }
     }
 
-    private loadMap(tileData: any, tileTextures: any, mapData: any): void {
+    private loadMap(): void {
+        if (!this.app || !this.app.loader.resources) return;
+
+        const tileData: any = this.app.loader.resources['tiles-data'] ? this.app.loader.resources['tiles-data'].data : null;
+        const tileTextures: any = this.app.loader.resources['tiles-image'] ? this.app.loader.resources['tiles-image'].texture : null;
+        const mapData: any = this.app.loader.resources['map-data'] ? this.app.loader.resources['map-data'].data : null;
+
         if (!tileData || !tileTextures || !mapData) return;
 
         const mapLoader = new MapLoader(tileData, tileTextures, mapData);
@@ -116,12 +138,16 @@ export class Game {
         this.easyStar.setAcceptableTiles([0]);
     }
 
-    private setupPlayer(playerFrames: any[]): void {
+    private setupPlayer(): void {
+        if (!this.app || !this.app.loader.resources) return;
+
+        const playerFrames: string[] = this.app.loader.resources['girl1'] && this.app.loader.resources['girl1'].data ? 
+            Object.keys(this.app.loader.resources['girl1'].data.frames) : null!;
+
         const p = new Player(playerFrames);
         this.player = p;
         this.updatePlayerHealthUI();
         this.updatePlayerScoreUI();
-        p.setIsHit(3);
 
         const sprite = p.getSprite();
 
@@ -129,7 +155,17 @@ export class Game {
         this.viewport.follow(sprite);
     }
 
-    private loadZombies(zombieFrames: any[]): void {
+    private loadZombies(): void {
+        if (!this.app || !this.app.loader.resources) return;
+
+        const zombieFrames: string[] = this.app.loader.resources['girl2'] && this.app.loader.resources['girl2'].data ?
+            Object.keys(this.app.loader.resources['girl2'].data.frames) : null!;
+
+        if (this.zombies && this.zombies.length) {
+            this.zombies.forEach(z => this.viewport.removeChild(z.getSprite()));
+            this.zombies = [];
+        }
+
         for (let i = 0; i < 10; i++) {
             const zombiePos = this.getRandomWorldPosition();
 
@@ -141,6 +177,33 @@ export class Game {
     
                 this.zombies.push(zombie);
             }
+        }
+    }
+
+    private restart(): void {
+        if (this.assetsLoaded) {
+            this.updateClickToStartUI(false);
+            this.updateGameOverUI(false);
+            this.started = true;
+
+            // Reset player position
+            this.player.setPosition(0, 0);
+            this.player.setZombie(false);
+            this.player.setIsDead(false);
+            this.player.setIsBoosted(false);
+
+            this.playerHealth = 100;
+            this.playerScore = 0;
+            this.updatePlayerHealthUI();
+            this.updatePlayerScoreUI();
+
+            // 3 seconds grace
+            this.player.setIsHit(3);
+
+            // Load zombies
+            this.loadZombies();
+            
+            // Load NPCs
         }
     }
 
@@ -185,15 +248,64 @@ export class Game {
             fontSize: 18,
             fontWeight: 'bold',
             fill: 0xFFFFFF,
+            strokeThickness: 2,
             align: 'right'
         });
             
-        const text = new PIXI.Text(this.playerScore.toString(), textStyle);
+        const text = new PIXI.Text('Score: ' + this.playerScore.toString(), textStyle);
         text.anchor.set(1, 0.5);
         text.position.set(this.width - 20, 20);
 
         this.app.stage.addChild(text);
         this.playerScoreUI = text;
+    }
+
+    private updateClickToStartUI(show?: boolean): void {
+        if (this.clickToStartUI) {
+            this.app.stage.removeChild(this.clickToStartUI);
+            this.clickToStartUI = null!;
+        }
+
+        if (show) {
+            const textStyle = new PIXI.TextStyle({
+                fontSize: 24,
+                fontWeight: 'bold',
+                fill: 0xFFFFFF,
+                strokeThickness: 2,
+                align: 'right'
+            });
+                
+            const text = new PIXI.Text('Click to Start', textStyle);
+            text.anchor.set(0.5);
+            text.position.set(this.width / 2, this.height / 2);
+    
+            this.app.stage.addChild(text);
+            this.clickToStartUI = text;
+        }
+    }
+
+    private updateGameOverUI(show?: boolean): void {
+        if (this.gameOverUI) {
+            this.app.stage.removeChild(this.gameOverUI);
+            this.gameOverUI = null!;
+        }
+
+        if (show) {
+            const textStyle = new PIXI.TextStyle({
+                fontSize: 32,
+                fontWeight: 'bold',
+                fill: 0xFFFFFF,
+                strokeThickness: 2,
+                align: 'right'
+            });
+                
+            const text = new PIXI.Text('Game Over', textStyle);
+            text.anchor.set(0.5);
+            text.position.set(this.width / 2, this.height / 2 - 48);
+    
+            this.app.stage.addChild(text);
+            this.gameOverUI = text;
+        }
     }
 
     private spawnNewItem(itemType: ItemNames): void {
@@ -300,6 +412,8 @@ export class Game {
     }
 
     private loadAssets(): void {
+        this.isLoading = true;
+
         if (this.app) {
             // Load first girl character sprite
             this.app.loader
@@ -347,28 +461,13 @@ export class Game {
                 .add('tiles-image', '/assets/hospital-tiles.png')
                 .add('map-data', '/assets/maptest.json')
                 .load((e: PIXI.Loader, r: {[key: string]: PIXI.LoaderResource} ) => {
+                    this.isLoading = false;
                     this.assetsLoaded = true;
 
-                    // Load map
-                    if (r && r['tiles-data'] && r['tiles-image'] && r['map-data']) {
-                        this.loadMap(r['tiles-data'].data, r['tiles-image'].texture, r['map-data'].data);
-                    }
+                    this.loadMap();
+                    this.setupPlayer();
 
-                    // Player
-                    if (r && r['girl1'] && r['girl1'].data && r['girl1'].data.frames) {
-                        this.setupPlayer(Object.keys(r['girl1'].data.frames));
-                        //
-                    }
-
-                    // Zombies
-                    if (r && r['girl2'] && r['girl2'].data && r['girl2'].data.frames) {
-                        this.loadZombies(Object.keys(r['girl2'].data.frames));
-                    }
-
-                    if (r && r[ItemNames.ITEM_HEALTH_PACK + '_sfx']) {
-                        //console.log(r[ItemNames.ITEM_HEALTH_PACK + '_sfx'].data.play());
-                    }
-
+                    this.updateClickToStartUI(true);
                     sound.play('background_music', {volume: 0.3, loop: true});
                 });
         }
@@ -416,21 +515,23 @@ export class Game {
     }    
 
     private gameLoop(delta: number): void {
-        // Update player
-        this.updatePlayer(delta);
+        if (this.started) {
+            // Update player
+            this.updatePlayer(delta);
 
-        // Update zombie position
-        this.updateZombies(delta);
+            // Update zombie position
+            this.updateZombies(delta);
 
-        this.updateZSorting();
-        this.checkCollisions();
+            this.updateZSorting();
+            this.checkCollisions();
 
-        // Update viewport
-        this.updateViewport();
+            // Update viewport
+            this.updateViewport();
 
-        // Spawn items
-        this.spawnItems();
-        this.updateItemLife(delta);
+            // Spawn items
+            this.spawnItems();
+            this.updateItemLife(delta);
+        }
     }
 
     private updatePlayer(delta: number): void {
@@ -637,6 +738,10 @@ export class Game {
             this.playerHealth = 0;
             this.player.setIsDead(true);
             sound.play('player_death');
+            this.updateGameOverUI(true);
+            
+            this.updateClickToStartUI(true);
+            this.started = false;
         } else if (this.playerHealth > 100) {
             this.playerHealth = 100;
         }
