@@ -144,12 +144,12 @@
                  "x":48,
                  "y":0
                 }],
-         "height":96,
+         "height":64,
          "id":3,
          "name":"Below",
          "opacity":1,
          "startx":-16,
-         "starty":-64,
+         "starty":-48,
          "type":"tilelayer",
          "visible":true,
          "width":80,
@@ -760,7 +760,7 @@
                  "x":48,
                  "y":0
                 }],
-         "height":80,
+         "height":64,
          "id":5,
          "name":"Middle",
          "opacity":1,
