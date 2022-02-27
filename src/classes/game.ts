@@ -54,6 +54,7 @@ export class Game {
     constructor() {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
         PIXI.settings.ROUND_PIXELS = true;
+        PIXI.settings.SORTABLE_CHILDREN = true;
 
         // App
         const app = new PIXI.Application({
@@ -98,6 +99,7 @@ export class Game {
     }
 
     start() {
+        console.log('starting');
         this.loadAssets();
         this.input.start();
 
@@ -671,21 +673,22 @@ export class Game {
                 if (this.map && pPos) {
                     const gridPos = this.map.getGridReferencePosition(zPos.x, zPos.y);
                     if (gridPos) {
-                        zombie.setFindingPath(true);
-
                         // If close to player - follow, else
                         // Get random position to wander on the map
                         const newPos = distance < 100 ?
                             this.map.getGridReferencePosition(pPos.x, pPos.y) : this.getRandomGridPosition();
 
-                        this.easyStar.findPath(gridPos.x, gridPos.y, newPos.x, newPos.y, (path) => {
-                            if (path) {
-                                const adjustedPath = this.map.getMapPositionsFromPath(path);
-                                zombie.setNewPath(adjustedPath);
-                            }
-
-                            zombie.setFindingPath(false);
-                        });
+                        if (newPos) {
+                            zombie.setFindingPath(true);
+                            this.easyStar.findPath(gridPos.x, gridPos.y, newPos.x, newPos.y, (path) => {
+                                if (path) {
+                                    const adjustedPath = this.map.getMapPositionsFromPath(path);
+                                    zombie.setNewPath(adjustedPath);
+                                }
+    
+                                zombie.setFindingPath(false);
+                            });
+                        }
                     }
                 }
             }
@@ -718,18 +721,19 @@ export class Game {
             if (!npc.getCurrentPath() && !npc.getFindingPath()) {
                 const gridPos = this.map.getGridReferencePosition(nPos.x, nPos.y);
                     if (gridPos) {
-                        npc.setFindingPath(true);
-
                         const newPos = this.getRandomGridPosition(); // TO DO
 
-                        this.easyStar.findPath(gridPos.x, gridPos.y, newPos.x, newPos.y, (path) => {
-                            if (path) {
-                                const adjustedPath = this.map.getMapPositionsFromPath(path);
-                                npc.setNewPath(adjustedPath);
-                            }
-
-                            npc.setFindingPath(false);
-                        });
+                        if (newPos) {
+                            npc.setFindingPath(true);
+                            this.easyStar.findPath(gridPos.x, gridPos.y, newPos.x, newPos.y, (path) => {
+                                if (path) {
+                                    const adjustedPath = this.map.getMapPositionsFromPath(path);
+                                    npc.setNewPath(adjustedPath);
+                                }
+    
+                                npc.setFindingPath(false);
+                            });
+                        }                        
                     }
             }
 
@@ -756,40 +760,18 @@ export class Game {
     }
 
     private updateZSorting(): void {
-        // Map and "player" based sorting
-
-        const objectLayers = ['player', 'item'];
-
         this.viewport.children.sort((a, b) => {
-
-            if (a.name && b.name) {
-                // A - Map layer or Object layer vs. B - Map layer
-                if ((a.name.startsWith('map_') || objectLayers.includes(a.name)) && b.name.startsWith('map_')) {
-                    if (b.name.includes('Above')) {
-                        return -1;
-                    } else if (b.name.includes('Middle')) {
-                        return this.ySorting(a.y, b.y);
-                    } else if (b.name.includes('Below')) {
-                        return 1;
-                    }    
-                } 
-                // A - Map layer vs B. Object layer
-                else if (a.name.startsWith('map_') && objectLayers.includes(b.name)) {
-                    if (a.name.includes('Above')) {
-                        return 1;
-                    } else if (a.name.includes('Middle')) {
-                        return this.ySorting(a.y, b.y);
-                    } else if (a.name.includes('Below')) {
-                        return -1;
-                    }
-                }
-                // A - Object layer vs B. Object layer - use y-based sorting
-                else if (objectLayers.includes(a.name) && objectLayers.includes(b.name)) {
-                    return this.ySorting(a.y, b.y);
-                }
+            if (a.name.startsWith('map_') && a.name.includes('Below') && !b.name.includes('Below')) {
+                return -1;
+            } else if (b.name.startsWith('map_') && b.name.includes('Below') && !a.name.includes('Below')) {
+                return 1;
+            } else if (a.name.startsWith('map_') && a.name.includes('Above')) {
+                return 1;
+            } else if (b.name.startsWith('map_') && b.name.includes('Above')) {
+                return -1;
             }
 
-            return -1;
+            return this.ySorting(a.y, b.y);
         });
     }
 
