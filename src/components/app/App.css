@@ -5,4 +5,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+}
+
+.how-to {
+  margin-top: 16px;
+  font-family: 'VT323', Courier, monospace;
+  color: white;
+  size: 12px;
+}
+
+a, a:link, a:visited {
+  text-decoration: underline;
+  color: #cccccc;
+}
+
+a:hover {
+  color: #fefcaa
 }
