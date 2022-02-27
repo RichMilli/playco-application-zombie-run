@@ -42,11 +42,14 @@ export class Game {
     private playerZombieTime: number = null!;
 
     private loadingUI: PIXI.Text = null!;
+    private zombieRunLogoUI: PIXI.Sprite = null!;
     private clickToStartUI: PIXI.Text = null!;
-    private gameOverUI: PIXI.Text = null!;
+    private gameOverUI: PIXI.Sprite = null!;
 
     private isLoading: boolean = true;
     private started: boolean = false;
+
+    private elapsedTime: number = 0;
 
     constructor() {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
@@ -210,6 +213,7 @@ export class Game {
 
     private restart(): void {
         if (this.assetsLoaded) {
+            this.updateZombieRunLogoUI(false);
             this.updateClickToStartUI(false);
             this.updateGameOverUI(false);
             this.started = true;
@@ -236,6 +240,32 @@ export class Game {
         }
     }
 
+    private updateLoadingUI(show?: boolean): void {
+        if (this.loadingUI) {
+            this.app.stage.removeChild(this.loadingUI);
+            this.loadingUI = null!;
+        }
+
+        if (show) {
+            const textStyle = new PIXI.TextStyle({
+                fontFamily: "\"VT323\", Courier, monospace",
+                fontSize: 24,
+                fontWeight: 'bold',
+                letterSpacing: 2,
+                fill: 0xFFFFFF,
+                strokeThickness: 4,
+                align: 'right'
+            });
+    
+            const text = new PIXI.Text('Loading...', textStyle);
+            text.anchor.set(0.5);
+            text.position.set(this.width / 2, this.height / 2);
+    
+            this.app.stage.addChild(text);
+            this.loadingUI = text;
+        }
+    }
+
     private updatePlayerHealthUI(): void {
         if (this.playerHealthUI) {
             this.app.stage.removeChild(this.playerHealthUI);
@@ -257,7 +287,7 @@ export class Game {
                     )
                 )
             )
-        )
+        );
 
         graphics.beginFill(color);
         graphics.drawRect(20, 20, 240 * r, 20);
@@ -274,19 +304,40 @@ export class Game {
         }
 
         const textStyle = new PIXI.TextStyle({
-            fontSize: 18,
+            fontFamily: "\"VT323\", Courier, monospace",
+            fontSize: 24,
             fontWeight: 'bold',
+            letterSpacing: 2,
             fill: 0xFFFFFF,
-            strokeThickness: 2,
+            strokeThickness: 4,
             align: 'right'
         });
-            
-        const text = new PIXI.Text('Score: ' + this.playerScore.toString(), textStyle);
+
+        const text = new PIXI.Text('SCORE: ' + this.playerScore.toString(), textStyle);
         text.anchor.set(1, 0.5);
-        text.position.set(this.width - 20, 20);
+        text.position.set(this.width - 20, 32);
 
         this.app.stage.addChild(text);
         this.playerScoreUI = text;
+    }
+
+    private updateZombieRunLogoUI(show?: boolean): void {
+        if (this.zombieRunLogoUI) {
+            this.app.stage.removeChild(this.zombieRunLogoUI);
+            this.zombieRunLogoUI = null!;
+        }
+
+        if (show) {
+            const texture = this.app.loader.resources['zombie-run-logo'] ? this.app.loader.resources['zombie-run-logo'].texture : null;
+            if (!texture) return;
+
+            const sprite = new PIXI.Sprite(texture);
+            sprite.anchor.set(0.5);
+            sprite.position.set(this.width / 2, this.height / 2 - 50);
+
+            this.app.stage.addChild(sprite);
+            this.zombieRunLogoUI = sprite;
+        }
     }
 
     private updateClickToStartUI(show?: boolean): void {
@@ -297,16 +348,18 @@ export class Game {
 
         if (show) {
             const textStyle = new PIXI.TextStyle({
+                fontFamily: "\"VT323\", Courier, monospace",
                 fontSize: 24,
                 fontWeight: 'bold',
-                fill: 0xFFFFFF,
-                strokeThickness: 2,
+                letterSpacing: 2,
+                fill: 0xFFD300,
+                strokeThickness: 4,
                 align: 'right'
             });
                 
             const text = new PIXI.Text('Click to Start', textStyle);
             text.anchor.set(0.5);
-            text.position.set(this.width / 2, this.height / 2);
+            text.position.set(this.width / 2, this.height / 2 + 80);
     
             this.app.stage.addChild(text);
             this.clickToStartUI = text;
@@ -320,20 +373,15 @@ export class Game {
         }
 
         if (show) {
-            const textStyle = new PIXI.TextStyle({
-                fontSize: 32,
-                fontWeight: 'bold',
-                fill: 0xFFFFFF,
-                strokeThickness: 2,
-                align: 'right'
-            });
-                
-            const text = new PIXI.Text('Game Over', textStyle);
-            text.anchor.set(0.5);
-            text.position.set(this.width / 2, this.height / 2 - 48);
-    
-            this.app.stage.addChild(text);
-            this.gameOverUI = text;
+            const texture = this.app.loader.resources['game-over'] ? this.app.loader.resources['game-over'].texture : null;
+            if (!texture) return;
+
+            const sprite = new PIXI.Sprite(texture);
+            sprite.anchor.set(0.5);
+            sprite.position.set(this.width / 2, this.height / 2 - 50);
+
+            this.app.stage.addChild(sprite);
+            this.gameOverUI = sprite;
         }
     }
 
@@ -437,9 +485,16 @@ export class Game {
 
     private loadAssets(): void {
         this.isLoading = true;
+        this.updateLoadingUI(true);
 
         if (this.app) {
             this.app.loader
+
+                // Logo
+                .add('zombie-run-logo', '/assets/zombie-run-logo.png')
+
+                // Game over image
+                .add('game-over', '/assets/game-over.png')
 
                 // Zombie sprites
                 .add('girl1', '/assets/doc8.json')
@@ -494,12 +549,14 @@ export class Game {
                 .add('tiles-image', '/assets/hospital-tiles.png')
                 .add('map-data', '/assets/maptest.json')
                 .load((e: PIXI.Loader, r: {[key: string]: PIXI.LoaderResource} ) => {
+                    this.updateLoadingUI(false);
                     this.isLoading = false;
                     this.assetsLoaded = true;
 
                     this.loadMap();
                     this.setupPlayer();
 
+                    this.updateZombieRunLogoUI(true);
                     this.updateClickToStartUI(true);
                     sound.play('background_music', {volume: 0.3, loop: true});
                 });
@@ -530,6 +587,8 @@ export class Game {
     }    
 
     private gameLoop(delta: number): void {
+        this.elapsedTime += delta;
+
         if (this.started) {
             // Update player
             this.updatePlayer(delta);
@@ -552,6 +611,14 @@ export class Game {
 
             // Update easy star on tick
             this.easyStar.calculate();
+        } else {
+            if (this.zombieRunLogoUI || this.gameOverUI) {
+                (this.zombieRunLogoUI || this.gameOverUI).position.set(this.width / 2, this.height / 2 - 50 + 8 * Math.sin(this.elapsedTime / 20));
+            }
+
+            if (this.clickToStartUI) {
+                this.clickToStartUI.alpha = Math.ceil(Math.sin(this.elapsedTime / 15));
+            }
         }
     }
 
