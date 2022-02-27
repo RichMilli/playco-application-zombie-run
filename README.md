@@ -1,6 +1,30 @@
-# Getting Started with Create React App
+# Zombie Run
+
+Created as an personal exercise as part of my job application to Playco.
+
+A demo is currently playable [here](http://zombie-run.s3-website.us-east-2.amazonaws.com/).
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+## How to Play
+
+Use the WASD keys to move.
+
+Try and save as many hospital staff from becoming zombies and get the highest score.
+
+## Bugs / Issues
+
+* The collision detection between the player and the map is based on the full player sprite which means its difficult to navigate between tight spots.
+* Some items spawn in inaccessible locations.
+* There is no way to win.
+
+## Installing
+
+To install all required packages, in the project directory run:
+
+### `npm install`
+
+Note: You must first have Node.js installed.
 
 ## Available Scripts
 
