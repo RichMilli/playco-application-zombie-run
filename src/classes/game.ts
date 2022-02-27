@@ -36,10 +36,14 @@ export class Game {
     private playerHealth: number = 100;
     private playerScore: number = 0;
     private playerCloseZombies: number = 0;
+    private rescuedNpcs: number = 0;
 
     private playerHealthUI: PIXI.Graphics = null!;
     private playerScoreUI: PIXI.Text = null!;
+    private npcRescuedCountUI: PIXI.Text = null!;
+
     private playerZombieTime: number = null!;
+    
 
     private loadingUI: PIXI.Text = null!;
     private zombieRunLogoUI: PIXI.Sprite = null!;
@@ -146,13 +150,14 @@ export class Game {
     private setupPlayer(): void {
         if (!this.app || !this.app.loader.resources) return;
 
-        const playerFrames: string[] = this.app.loader.resources['girl1'] && this.app.loader.resources['girl1'].data ? 
-            Object.keys(this.app.loader.resources['girl1'].data.frames) : null!;
+        const playerFrames: string[] = this.app.loader.resources['player'] && this.app.loader.resources['player'].data ? 
+            Object.keys(this.app.loader.resources['player'].data.frames) : null!;
 
         const p = new Character(playerFrames);
         this.player = p;
         this.updatePlayerHealthUI();
         this.updatePlayerScoreUI();
+        this.updateNpcRescuedUI();
 
         const sprite = p.getSprite();
 
@@ -163,19 +168,21 @@ export class Game {
     private loadZombies(): void {
         if (!this.app || !this.app.loader.resources) return;
 
-        // TO DO - Randomise
-        const zombieFrames: string[] = this.app.loader.resources['girl2'] && this.app.loader.resources['girl2'].data ?
-            Object.keys(this.app.loader.resources['girl2'].data.frames) : null!;
-
         if (this.zombies && this.zombies.length) {
             this.zombies.forEach(z => this.viewport.removeChild(z.getSprite()));
             this.zombies = [];
         }
 
-        for (let i = 0; i < 1; i++) {
+        for (let i = 0; i < 5; i++) {
             const zombiePos = this.getRandomWorldPosition();
 
             if (zombiePos) {
+                const r = Math.floor(Math.random() * 6) + 1;
+                const resourceName = `zombie${r}`;
+        
+                const zombieFrames: string[] = this.app.loader.resources[resourceName] && this.app.loader.resources[resourceName].data ?
+                    Object.keys(this.app.loader.resources[resourceName].data.frames) : null!;
+
                 const zombie = new Character(zombieFrames);
                 zombie.setPosition(zombiePos.x, zombiePos.y);
                 zombie.setZombie(true);
@@ -194,7 +201,7 @@ export class Game {
             this.npcs = [];
         }
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 20; i++) {
             const npcPos = this.getRandomWorldPosition();
 
             if (npcPos) {
@@ -204,7 +211,7 @@ export class Game {
                 const npcFrames: string[] = this.app.loader.resources[resourceName] && this.app.loader.resources[resourceName].data ?
                     Object.keys(this.app.loader.resources[resourceName].data.frames) : null!;
 
-                const npc = new Character(npcFrames, 0.5);
+                const npc = new Character(npcFrames, 0.4);
                 npc.setPosition(npcPos.x, npcPos.y);
                 this.viewport.addChild(npc.getSprite());
 
@@ -221,24 +228,26 @@ export class Game {
             this.started = true;
 
             // Reset player position
-            this.player.setPosition(0, 0);
+            this.player.setPosition(-114, 54);
             this.player.setZombie(false);
             this.player.setIsDead(false);
             this.player.setIsBoosted(false);
-
-            this.playerHealth = 100;
-            this.playerScore = 0;
-            this.updatePlayerHealthUI();
-            this.updatePlayerScoreUI();
-
-            // 3 seconds grace
-            this.player.setIsHit(3);
 
             // Load zombies
             this.loadZombies();
             
             // Load NPCs
             this.loadNPCs();
+
+            this.playerHealth = 100;
+            this.playerScore = 0;
+            this.rescuedNpcs = 0;
+            this.updatePlayerHealthUI();
+            this.updatePlayerScoreUI();
+            this.updateNpcRescuedUI();
+
+            // 3 seconds grace
+            this.player.setIsHit(3);
         }
     }
 
@@ -321,6 +330,31 @@ export class Game {
 
         this.app.stage.addChild(text);
         this.playerScoreUI = text;
+    }
+
+    private updateNpcRescuedUI(): void {
+        if (this.npcRescuedCountUI) {
+            this.app.stage.removeChild(this.npcRescuedCountUI);
+            this.npcRescuedCountUI = null!;
+        }
+
+        // Text
+        const textStyle = new PIXI.TextStyle({
+            fontFamily: "\"VT323\", Courier, monospace",
+            fontSize: 24,
+            fontWeight: 'bold',
+            letterSpacing: 2,
+            fill: 0xFFFFFF,
+            strokeThickness: 4,
+            align: 'left'
+        });
+
+        const text = new PIXI.Text(`RESCUED: ${this.rescuedNpcs} (${this.npcs.length})`, textStyle);
+        text.anchor.set(0, 0.5);
+        text.position.set(20, this.height - 20);
+
+        this.app.stage.addChild(text);
+        this.npcRescuedCountUI = text;
     }
 
     private updateZombieRunLogoUI(show?: boolean): void {
@@ -415,15 +449,15 @@ export class Game {
         if (this.assetsLoaded) {
             const r = Math.round(Math.random() * 100000) / 100000;
     
-            if (r > 0.10000 && r < 0.10500) {
+            if (r > 0.10000 && r < 0.20000) {
                 this.spawnNewItem(ItemNames.ITEM_SHINY);
             } else if (r > 0.20000 && r < 0.20100) {
                 this.spawnNewItem(ItemNames.ITEM_HEALTH_PACK);
-            } else if (r > 0.30000 && r < 0.30010) {
+            } else if (r > 0.30000 && r < 0.30100) {
                 this.spawnNewItem(ItemNames.ITEM_SPROUT);
-            } else if (r > 0.40000 && r < 0.40100) {
+            } else if (r > 0.40000 && r < 0.40500) {
                 this.spawnNewItem(ItemNames.ITEM_BRAIN);
-            } else if (r > 0.50000 && r < 0.50002) {
+            } else if (r > 0.50000 && r < 0.50050) {
                 this.spawnNewItem(ItemNames.ITEM_CHIP);
             }
         }
@@ -498,9 +532,17 @@ export class Game {
                 // Game over image
                 .add('game-over', '/assets/game-over.png')
 
+                // Player sprites
+                .add('player', '/assets/player.json')
+
                 // Zombie sprites
-                .add('girl1', '/assets/doc8.json')
-                .add('girl2', '/assets/girl2.json')
+                .add('zombie1', '/assets/zombie1.json')
+                .add('zombie2', '/assets/zombie2.json')
+                .add('zombie3', '/assets/zombie3.json')
+                .add('zombie4', '/assets/zombie4.json')
+                .add('zombie5', '/assets/zombie5.json')
+                .add('zombie6', '/assets/zombie6.json')
+                .add('zombie7', '/assets/zombie7.json')
 
                 // Doctor/Zombie Sprites
                 .add('doc1', '/assets/doc1.json')
@@ -531,19 +573,20 @@ export class Game {
                 .add(ItemNames.ITEM_SHINY + '_sfx', '/assets/item-shiny.wav')
 
                 // Zombie sfx
-                .add('zombie1', '/assets/zombie1.wav')
-                .add('zombie2', '/assets/zombie2.wav')
-                .add('zombie3', '/assets/zombie3.wav')
-                .add('zombie4', '/assets/zombie4.wav')
-                .add('zombie5', '/assets/zombie5.wav')
-                .add('zombie6', '/assets/zombie6.wav')
-                .add('zombie7', '/assets/zombie7.wav')
-                .add('zombie8', '/assets/zombie8.wav')
-                .add('zombie9', '/assets/zombie9.wav')
+                .add('zombie1_sfx', '/assets/zombie1.wav')
+                .add('zombie2_sfx', '/assets/zombie2.wav')
+                .add('zombie3_sfx', '/assets/zombie3.wav')
+                .add('zombie4_sfx', '/assets/zombie4.wav')
+                .add('zombie5_sfx', '/assets/zombie5.wav')
+                .add('zombie6_sfx', '/assets/zombie6.wav')
+                .add('zombie7_sfx', '/assets/zombie7.wav')
+                .add('zombie8_sfx', '/assets/zombie8.wav')
+                .add('zombie9_sfx', '/assets/zombie9.wav')
 
                 // Other sfx
                 .add('player_hit_sfx', '/assets/player-hit.wav')
-                .add('player_death', '/assets/player-death.mp3')
+                .add('player_death_sfx', '/assets/player-death.mp3')
+                .add('npc_rescued_sfx', '/assets/npc-rescued.wav')
                 .add('background_music', '/assets/background-music.wav')
 
                 // Map Stuff
@@ -586,7 +629,7 @@ export class Game {
         }
 
         return null!;
-    }    
+    }
 
     private gameLoop(delta: number): void {
         this.elapsedTime += delta;
@@ -613,6 +656,9 @@ export class Game {
 
             // Update easy star on tick
             this.easyStar.calculate();
+
+            // Check how many NPCs are remaining
+            this.checkGameOver();
         } else {
             if (this.zombieRunLogoUI || this.gameOverUI) {
                 (this.zombieRunLogoUI || this.gameOverUI).position.set(this.width / 2, this.height / 2 - 50 + 8 * Math.sin(this.elapsedTime / 20));
@@ -665,7 +711,7 @@ export class Game {
 
             const distance = this.getDistance(pPos, zPos);
 
-            if (distance < 100) {
+            if (distance < 500) {
                 this.playerCloseZombies++;
             }
 
@@ -706,7 +752,7 @@ export class Game {
 
     private playRandomZombieSound() {
         const r = Math.floor(Math.random() * 9) + 1;
-        sound.play('zombie' + r, {volume: 0.2 * Math.random() + 0.1});
+        sound.play(`zombie${r}_sfx`, {volume: 0.2 * Math.random() + 0.1});
     }
 
     private updateNPCs(delta: number): void {
@@ -780,6 +826,7 @@ export class Game {
         this.checkPlayerMapCollisions();
         this.checkPlayerItemCollisions();
         this.checkZombieNpcCollisions();
+        this.checkPlayerNpcCollision();
     }
 
     private checkPlayerZombieCollisions(): void {
@@ -788,8 +835,30 @@ export class Game {
             const zombies = this.zombies.map(z => z.getSprite());
 
             // Zombie hit the player
-            (this.bump as any).hit(player.getSprite(), zombies, false, false, false, (collision: any, sprite: any) => {
+            (this.bump as any).hit(player.getSprite(), zombies, false, false, false, () => {
                 this.hitPlayer(5);
+            });
+        }
+    }
+
+    private checkPlayerNpcCollision(): void {
+        if (this.player && this.npcs && this.npcs.length > 0) {
+            const player = this.player;
+            const npcs = this.npcs.map(n => n.getSprite());
+
+            // Player hit the NPC - rescued
+            (this.bump as any).hit(player.getSprite(), npcs, false, false, false, (collision: any, sprite: any) => {
+                const npcIndex = this.npcs.findIndex(n => n.getSprite() === sprite);
+                if (npcIndex > -1) {
+                    this.adjustPlayerScore(1000);
+                    sound.play('npc_rescued_sfx');
+
+                    this.viewport.removeChild(sprite);
+                    this.npcs.splice(npcIndex, 1);
+
+                    this.rescuedNpcs++;
+                    this.updateNpcRescuedUI();
+                }
             });
         }
     }
@@ -837,14 +906,11 @@ export class Game {
             const npcsToSplice: number[] = [];
 
             for (let i = 0; i < this.npcs.length; i++) {
-                const hit = (this.bump as any).hit(this.npcs[i].getSprite(), zombies, false, false, false);
-
-                // If a zombie hits an NPC they become a zombie
-                if (hit) {
+                (this.bump as any).hit(this.npcs[i].getSprite(), zombies, false, false, false, () => {
                     this.npcs[i].setZombie(true);
                     this.playRandomZombieSound();
                     npcsToSplice.push(i);
-                }
+                });
             }
 
             // Switch npcs into zombie array
@@ -854,6 +920,8 @@ export class Game {
                     this.zombies.push(...npc);
                 });
             }
+
+            this.updateNpcRescuedUI();
         }
     }
 
@@ -872,11 +940,7 @@ export class Game {
         if (this.playerHealth <= 0) {
             this.playerHealth = 0;
             this.player.setIsDead(true);
-            sound.play('player_death');
-            this.updateGameOverUI(true);
-            
-            this.updateClickToStartUI(true);
-            this.started = false;
+            this.setGameOver();
         } else if (this.playerHealth > 100) {
             this.playerHealth = 100;
         }
@@ -894,5 +958,18 @@ export class Game {
         this.player.setZombie(true);
         this.hitPlayer(25, true);
         this.updatePlayerHealthUI();
+    }
+
+    private checkGameOver(): void {
+        if (this.npcs && this.npcs.length === 0) {
+            this.setGameOver();
+        }
+    }
+
+    private setGameOver(): void {
+        sound.play('player_death_sfx');
+        this.updateGameOverUI(true);
+        this.updateClickToStartUI(true);
+        this.started = false;
     }
 }
