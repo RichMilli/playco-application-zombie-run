@@ -836,7 +836,7 @@ export class Game {
 
             // Zombie hit the player
             (this.bump as any).hit(player.getSprite(), zombies, false, false, false, () => {
-                this.hitPlayer(5);
+                this.hitPlayer(25);
             });
         }
     }
